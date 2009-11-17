@@ -1,0 +1,60 @@
+Cube Escape v0.7, written by Sean McKean
+
+Description:
+    You are inside a cube made up of numerous shells, with a maze etched
+    on the surface of each shell. Escape the cube by travelling through
+    the mazes, including over cube edges, until you find an upward exit.
+    When you reach the red exit, you win.
+
+Requirements:
+    SDL             http://www.libsdl.org/download-1.2.php
+    SDL_ttf         http://www.libsdl.org/projects/SDL_ttf/
+
+Build instructions:
+    Type  make  at a suitable terminal in the main directory to build
+    the executable.
+
+To run:
+    Under Linux, type  ./cube-escape  at a terminal to run.
+    Under Windows, run cube-escape.exe .
+
+Controls:
+    At the options screen:
+        'Exit distance' controls exit distance factor of farthest
+          possible distance from maze beginning for each cube shell;
+          the smaller the factor, the closer the exit to the next shell.
+        'Number of levels' controls how many shells to calculate before
+          final exit.
+        'Starting level' controls which shell to start player on.
+
+    In game:
+        Move player around maze with arrow keys. Holding shift down and
+        pressing the arrow keys rotates maze clockwise, counter-
+        clockwise, or adjusts zoom; holding control and pressing the
+        arrow keys rotates to a different face of the cube. Pressing 'a'
+        key over a green exit makes the player ascend one level; 'd'
+        over a blue exit makes the player descend. The Enter key handles
+        both ascending and descending appropriately. Pressing 'f' sets
+        the camera mode for following the player on/off. Press '=' to
+        restore previous zoom level. Press 'q' to quit.
+
+Updates:
+    v0.7: Fixed Windows bug that hinders the player from moving at the
+          beginning.
+          Added option to set the beginning level.
+          Various fixes.
+
+    v0.6: Added start menu to play or resume game and set options.
+          Added alpha transition to level changes.
+          Added end screen.
+
+    v0.5: Initial release.
+
+TODO:
+    - Add mouse support to control maze rotation, zoom, and player
+      movement.
+    - Add sound support.
+    - Allow more than one exit per level.
+
+Questions... Ideas.. Comments.
+Email: <smckean@yvn.com>
