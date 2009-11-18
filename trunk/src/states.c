@@ -57,20 +57,24 @@ int IntroScreen()
     hdr_fnt = TTF_OpenFont(FONT_NAME, 40);
     opt_fnt = TTF_OpenFont(FONT_NAME, 32);
 
-    title_txt = TTF_RenderText_Shaded(hdr_fnt, TITLE, text_fg, text_bg);
-    new_txt = TTF_RenderText_Shaded(opt_fnt, "New Game", text_fg, text_bg);
+    title_txt = TTF_RenderText_Shaded( hdr_fnt, TITLE,
+                                       def_text_fg, def_text_bg );
+    new_txt = TTF_RenderText_Shaded( opt_fnt, "New Game",
+                                     def_text_fg, def_text_bg );
     new_dark_txt =
-        TTF_RenderText_Shaded(opt_fnt, "New Game", med_grey_fg, text_bg);
+        TTF_RenderText_Shaded(opt_fnt, "New Game", med_grey_fg, def_text_bg);
     quit_txt =
-        TTF_RenderText_Shaded(opt_fnt, "Quit", text_fg, text_bg);
+        TTF_RenderText_Shaded(opt_fnt, "Quit", def_text_fg, def_text_bg);
     quit_dark_txt =
-        TTF_RenderText_Shaded(opt_fnt, "Quit", med_grey_fg, text_bg);
+        TTF_RenderText_Shaded(opt_fnt, "Quit", med_grey_fg, def_text_bg);
     resume_txt =
         TTF_RenderText_Shaded( opt_fnt, "Resume Game",
-                               playing ? text_fg : dk_grey_fg, text_bg );
+                               playing ? def_text_fg : dk_grey_fg,
+                               def_text_bg );
     resume_dark_txt =
         TTF_RenderText_Shaded( opt_fnt, "Resume Game",
-                               playing ? med_grey_fg : dk_grey_fg, text_bg );
+                               playing ? med_grey_fg : dk_grey_fg,
+                               def_text_bg );
 
     txt_ch_h = TTF_FontHeight(opt_fnt);
 
@@ -234,7 +238,7 @@ int IntroScreen()
                              */
                             PreviousState = IntroScreen;
                             AffirmState = NULL;
-                            state_arg = "Really quit?";
+                            state_arg = quit_prompt;
                             finished = 1;
                             break;
 
@@ -249,7 +253,7 @@ int IntroScreen()
                                 NextState = ConfirmMessage;
                                 PreviousState = IntroScreen;
                                 AffirmState = NULL;
-                                state_arg = "Really quit?";
+                                state_arg = quit_prompt;
                                 finished = 1;
                             }
                             break;
@@ -294,7 +298,7 @@ int IntroScreen()
                                 NextState = ConfirmMessage;
                                 PreviousState = IntroScreen;
                                 AffirmState = NULL;
-                                state_arg = "Really quit?";
+                                state_arg = quit_prompt;
                                 finished = 1;
                             }
                             break;
@@ -362,6 +366,7 @@ int OptionsScreen()
                 *start_prompt_txt = NULL,
                 *start_txt = NULL,
                 *start_choice_txt = NULL,
+                *graphics_prompt_txt = NULL,
                 *prompt_a_txt = NULL,
                 *prompt_b_txt = NULL,
                 *adjust_txt = NULL;
@@ -372,49 +377,58 @@ int OptionsScreen()
     int finished = 0,
         txt_ch_w = 0,
         txt_ch_h = 0,
-        n_choices = 3,
+        n_choices = 4,
         choice = 0,
         m_x = 0,
         m_y = 0,
         m_b = 0,
         i = 0;
     char *dist_strs[] = { "10%", "25%", "50%", "75%", "100%" },
+         *graphic_strs[] = { "On", "Off" },
          level_str[16] = "",
          start_str[16] = "";
     float dist_choices[] = { 0.1f, 0.25f, 0.5f, 0.75f, 1.0f };
-    size_t num_dist_choices = sizeof(dist_choices) / sizeof(float);
-    SDL_Surface *dist_txts[sizeof(dist_choices) / sizeof(float)] = { NULL };
+    size_t num_dist_choices = sizeof(dist_choices) / sizeof(float),
+           num_graphics = 2;
+    SDL_Surface *dist_txts[sizeof(dist_choices) / sizeof(float)] = { NULL },
+                *graphic_txts[2] = { NULL };
     int chosen_dist = exit_choice,
         num_levels = total_num_levels,
-        start = start_level;
+        start = start_level,
+        graphics = fast_graphics;
 
     hdr_fnt = TTF_OpenFont(FONT_NAME, 40);
     opt_fnt = TTF_OpenFont(FONT_NAME, 20);
 
-    title_txt = TTF_RenderText_Shaded(hdr_fnt, "Options", text_fg, text_bg);
+    title_txt = TTF_RenderText_Shaded(hdr_fnt, "Options", def_text_fg, def_text_bg);
     help_txt = TTF_RenderText_Shaded( opt_fnt,
                                        "Use arrow keys or mouse to adjust",
-                                       text_fg, text_bg );
+                                       def_text_fg, def_text_bg );
     dist_prompt_txt = TTF_RenderText_Shaded( opt_fnt, "Exit distance:",
-                                             text_fg, text_bg);
+                                             def_text_fg, def_text_bg);
     for (i = 0; i < num_dist_choices; ++i)
         dist_txts[i] = TTF_RenderText_Shaded( opt_fnt, dist_strs[i],
-                                              option_fg, text_bg );
+                                              option_fg, def_text_bg );
     level_prompt_txt = TTF_RenderText_Shaded( opt_fnt, "Number of levels:",
-                                        text_fg, text_bg );
+                                              def_text_fg, def_text_bg );
     level_choice_txt = TTF_RenderText_Shaded( opt_fnt, "0123456789",
-                                               option_fg, text_bg );
+                                              option_fg, def_text_bg );
     start_prompt_txt = TTF_RenderText_Shaded( opt_fnt, "Starting level:",
-                                              text_fg, text_bg );
+                                              def_text_fg, def_text_bg );
     start_choice_txt = TTF_RenderText_Shaded( opt_fnt, "0123456789",
-                                              option_fg, text_bg );
+                                              option_fg, def_text_bg );
+    graphics_prompt_txt = TTF_RenderText_Shaded( opt_fnt, "Advanced graphics:",
+                                                 def_text_fg, def_text_bg );
+    for (i = 0; i < num_graphics; ++i)
+        graphic_txts[i] = TTF_RenderText_Shaded( opt_fnt, graphic_strs[i],
+                                                 option_fg, def_text_bg );
     prompt_a_txt = TTF_RenderText_Shaded( opt_fnt,
                                           "Press Enter key to accept values",
-                                          text_fg, text_bg );
+                                          def_text_fg, def_text_bg );
     prompt_b_txt = TTF_RenderText_Shaded( opt_fnt,
                                           "Escape cancels back to "
                                           "previous screen",
-                                          text_fg, text_bg );
+                                          def_text_fg, def_text_bg );
 
     TTF_SizeText(opt_fnt, "0", &txt_ch_w, &txt_ch_h);
 
@@ -429,7 +443,8 @@ int OptionsScreen()
     UpdateNumberText( start_str, start_txt, start_choice_txt,
                       txt_ch_w, txt_ch_h );
 
-    adjust_txt = TTF_RenderText_Shaded(opt_fnt, "<>", text_fg, text_bg);
+    adjust_txt = TTF_RenderText_Shaded( opt_fnt, "<>",
+                                        def_text_fg, def_text_bg );
 
     while (!finished)
     {
@@ -457,8 +472,7 @@ int OptionsScreen()
         }
         if ( m_x >= dst_rect.x &&
              m_x < dst_rect.x + dist_txts[chosen_dist]->w &&
-             m_y >= dst_rect.y &&
-             m_y < dst_rect.y + dist_txts[chosen_dist]->h )
+             m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
             if (m_b & 1 && chosen_dist < num_dist_choices - 1)
                 chosen_dist++;
@@ -482,7 +496,7 @@ int OptionsScreen()
         }
         if ( m_x >= dst_rect.x &&
              m_x < dst_rect.x + txt_ch_w * strlen(level_str) &&
-             m_y >= dst_rect.y && m_y < dst_rect.y + level_txt->h )
+             m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
             SDL_SetColors(level_choice_txt, &hi_bg, 0, 1);
             if (m_b & 1)
@@ -519,7 +533,7 @@ int OptionsScreen()
         }
         if ( m_x >= dst_rect.x &&
              m_x < dst_rect.x + txt_ch_w * strlen(start_str) &&
-             m_y >= dst_rect.y && m_y < dst_rect.y + start_txt->h )
+             m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
             SDL_SetColors(start_choice_txt, &hi_bg, 0, 1);
             if ((m_b & 1) && start < num_levels)
@@ -538,6 +552,30 @@ int OptionsScreen()
         UpdateNumberText( start_str, start_txt, start_choice_txt,
                           txt_ch_w, txt_ch_h );
         SDL_BlitSurface(start_txt, NULL, Screen, &dst_rect);
+
+        dst_rect.x = SCREEN_W / 2 - graphics_prompt_txt->w;
+        dst_rect.y += txt_ch_h * OPTION_TEXT_DIST_MULT;
+        SDL_BlitSurface(graphics_prompt_txt, NULL, Screen, &dst_rect);
+        dst_rect.x += graphics_prompt_txt->w + txt_ch_w * 4;
+        if (choice == 3)
+        {
+            dst_rect.x -= txt_ch_w * 3;
+            SDL_BlitSurface(adjust_txt, NULL, Screen, &dst_rect);
+            dst_rect.x += txt_ch_w * 3;
+        }
+        if ( m_x >= dst_rect.x &&
+             m_x < dst_rect.x + graphic_txts[graphics]->w &&
+             m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
+        {
+            if (m_b & 1)
+                graphics = (graphics + 1) % num_graphics;
+            if (m_b & 2)
+                graphics = (graphics + num_graphics - 1) % num_graphics;
+            SDL_SetColors(graphic_txts[graphics], &hi_bg, 0, 1);
+        }
+        else
+            SDL_SetColors(graphic_txts[graphics], &no_hi_bg, 0, 1);
+        SDL_BlitSurface(graphic_txts[graphics], NULL, Screen, &dst_rect);
 
         dst_rect.x = SCREEN_W / 2 - prompt_a_txt->w / 2;
         dst_rect.y = SCREEN_H - prompt_a_txt->h * 2;
@@ -574,6 +612,7 @@ int OptionsScreen()
                             exit_mult = dist_choices[exit_choice];
                             total_num_levels = num_levels;
                             start_level = start;
+                            fast_graphics = graphics;
                             NextState = GameLoop;
                             StartNewMaze();
                             finished = 1;
@@ -616,6 +655,11 @@ int OptionsScreen()
                                     }
                                     break;
 
+                                case 3:
+                                    graphics = (graphics + num_graphics - 1) %
+                                               num_graphics;
+                                    break;
+
                             }
                             break;
 
@@ -638,6 +682,10 @@ int OptionsScreen()
                                         start++;
                                         sprintf(start_str, "%d", start);
                                     }
+                                    break;
+
+                                case 3:
+                                    graphics = (graphics + 1) % num_graphics;
                                     break;
 
                             }
@@ -679,9 +727,12 @@ int OptionsScreen()
     SDL_FreeSurface(start_prompt_txt);
     SDL_FreeSurface(start_txt);
     SDL_FreeSurface(start_choice_txt);
-    SDL_FreeSurface(adjust_txt);
+    SDL_FreeSurface(graphics_prompt_txt);
+    for (i = 0; i < num_graphics; ++i)
+        SDL_FreeSurface(graphic_txts[i]);
     SDL_FreeSurface(prompt_a_txt);
     SDL_FreeSurface(prompt_b_txt);
+    SDL_FreeSurface(adjust_txt);
 
     if (NextState)
         return 0;
@@ -797,7 +848,7 @@ int GameLoop()
         RotatePalette( exit_up_sfc, exit_up_pal, exit_up_pal_cpy,
                        SPRITE_SIZE, INWARD, ticks );
         RotatePalette( exit_dn_sfc, exit_dn_pal, exit_dn_pal_cpy,
-                       SPRITE_SIZE, OUTWARD, ticks );
+                       SPRITE_SIZE, INWARD, ticks );
         RotatePalette( exit_final_sfc, exit_final_pal, exit_final_pal_cpy,
                        SPRITE_SIZE, INWARD, ticks );
 
@@ -812,7 +863,7 @@ int GameLoop()
                 SDL_BlitSurface(fade_sfc, NULL, Screen, NULL);
             }
             else
-                ticks = 0;
+                fade_start = 0;
         }
         SDL_UpdateRect(Screen, 0, 0, 0, 0);
 
@@ -824,7 +875,7 @@ int GameLoop()
                                  unhide_starts[quad][current_level][i] );
                     if (unhide_starts[quad][current_level][i] > 0)
                     {
-                        if (ticks >= UNHIDE_TIME)
+                        if (fast_graphics || ticks >= UNHIDE_TIME)
                         {
                             unhide_starts[quad][current_level][i] = 0xffffffff;
                             SetPixel_32( hide_sfcs[quad][current_level],
@@ -859,7 +910,9 @@ int GameLoop()
             player.move_y_opp = 0;
         }
 
-        if (k_up && rotation == ROTATE_NONE && current_level > 0)
+        ticks = SDL_GetTicks();
+
+        if (k_up && rotating == ROTATE_NONE && current_level > 0)
         {
             if (k_shift)
             {
@@ -876,11 +929,14 @@ int GameLoop()
             }
             else if (k_ctrl)
             {
-                follow_player = 0;
-                if (player.traversing == TRAVERSE_FOLLOW)
-                    player.traversing = TRAVERSE_CENTER;
-                rotation = ROTATE_UP;
-                rotation_start = SDL_GetTicks();
+                if (ticks - rotation_start > MAZE_ROTATE_TIME)
+                {
+                    follow_player = 0;
+                    if (player.traversing == TRAVERSE_FOLLOW)
+                        player.traversing = TRAVERSE_CENTER;
+                    rotating = ROTATE_UP;
+                    rotation_start = SDL_GetTicks();
+                }
             }
             else
             {
@@ -894,7 +950,7 @@ int GameLoop()
             }
         }
 
-        if (k_down && rotation == ROTATE_NONE && current_level > 0)
+        if (k_down && rotating == ROTATE_NONE && current_level > 0)
         {
             if (k_shift)
             {
@@ -913,11 +969,14 @@ int GameLoop()
             }
             else if (k_ctrl)
             {
-                follow_player = 0;
-                if (player.traversing == TRAVERSE_FOLLOW)
-                    player.traversing = TRAVERSE_CENTER;
-                rotation = ROTATE_DOWN;
-                rotation_start = SDL_GetTicks();
+                if (ticks - rotation_start > MAZE_ROTATE_TIME)
+                {
+                    follow_player = 0;
+                    if (player.traversing == TRAVERSE_FOLLOW)
+                        player.traversing = TRAVERSE_CENTER;
+                    rotating = ROTATE_DOWN;
+                    rotation_start = SDL_GetTicks();
+                }
             }
             else
             {
@@ -933,23 +992,29 @@ int GameLoop()
             }
         }
 
-        if (k_left && rotation == ROTATE_NONE && current_level > 0)
+        if (k_left && rotating == ROTATE_NONE && current_level > 0)
         {
             if (k_shift)
             {
-                follow_player = 0;
-                if (player.traversing == TRAVERSE_FOLLOW)
-                    player.traversing = TRAVERSE_CENTER;
-                rotation = ROTATE_CCWISE;
-                rotation_start = SDL_GetTicks();
+                if (ticks - rotation_start > MAZE_ROTATE_TIME)
+                {
+                    follow_player = 0;
+                    if (player.traversing == TRAVERSE_FOLLOW)
+                        player.traversing = TRAVERSE_CENTER;
+                    rotating = ROTATE_CCWISE;
+                    rotation_start = SDL_GetTicks();
+                }
             }
             else if (k_ctrl)
             {
-                follow_player = 0;
-                if (player.traversing == TRAVERSE_FOLLOW)
-                    player.traversing = TRAVERSE_CENTER;
-                rotation = ROTATE_LEFT;
-                rotation_start = SDL_GetTicks();
+                if (ticks - rotation_start > MAZE_ROTATE_TIME)
+                {
+                    follow_player = 0;
+                    if (player.traversing == TRAVERSE_FOLLOW)
+                        player.traversing = TRAVERSE_CENTER;
+                    rotating = ROTATE_LEFT;
+                    rotation_start = SDL_GetTicks();
+                }
             }
             else
             {
@@ -965,23 +1030,29 @@ int GameLoop()
             }
         }
 
-        if (k_right && rotation == ROTATE_NONE && current_level > 0)
+        if (k_right && rotating == ROTATE_NONE && current_level > 0)
         {
             if (k_shift)
             {
-                follow_player = 0;
-                if (player.traversing == TRAVERSE_FOLLOW)
-                    player.traversing = TRAVERSE_CENTER;
-                rotation = ROTATE_CWISE;
-                rotation_start = SDL_GetTicks();
+                if (ticks - rotation_start > MAZE_ROTATE_TIME)
+                {
+                    follow_player = 0;
+                    if (player.traversing == TRAVERSE_FOLLOW)
+                        player.traversing = TRAVERSE_CENTER;
+                    rotating = ROTATE_CWISE;
+                    rotation_start = SDL_GetTicks();
+                }
             }
             else if (k_ctrl)
             {
-                follow_player = 0;
-                if (player.traversing == TRAVERSE_FOLLOW)
-                    player.traversing = TRAVERSE_CENTER;
-                rotation = ROTATE_RIGHT;
-                rotation_start = SDL_GetTicks();
+                if (ticks - rotation_start > MAZE_ROTATE_TIME)
+                {
+                    follow_player = 0;
+                    if (player.traversing == TRAVERSE_FOLLOW)
+                        player.traversing = TRAVERSE_CENTER;
+                    rotating = ROTATE_RIGHT;
+                    rotation_start = SDL_GetTicks();
+                }
             }
             else
             {
@@ -997,10 +1068,10 @@ int GameLoop()
             }
         }
 
-        if (rotation && RotateCube(player.traversing))
+        if ( rotating && (fast_graphics && RotateCube(TRAVERSE_FOLLOW)) ||
+             (!fast_graphics && RotateCube(player.traversing)) )
         {
-            rotation = ROTATE_NONE;
-            rotation_start = 0;
+            rotating = ROTATE_NONE;
         }
 
         while (SDL_GetTicks() - tick_count < hold_ticks)
@@ -1008,7 +1079,7 @@ int GameLoop()
             SDL_Delay(1);
         }
         n_frames++;
-        n_ticks += SDL_GetTicks() - tick_count;
+        total_ticks += SDL_GetTicks() - tick_count;
         tick_count = SDL_GetTicks();
 
         while (SDL_PollEvent(&evt))
@@ -1095,15 +1166,23 @@ int GameLoop()
                                 player.room.quad = 0;
                                 ResetObjects();
 
-                                fade_start = MAX(1, SDL_GetTicks());
-                                SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+                                if (!fast_graphics)
+                                {
+                                    fade_start = MAX(1, SDL_GetTicks());
+                                    SDL_BlitSurface( Screen, NULL,
+                                                     prev_sfc, NULL );
+                                }
                             }
                             else if ( player.level == total_num_levels - 1 &&
                                       PlayerOnExit(&exit_final_room) )
                             {
                                 NextState = WinScreen;
-                                fade_start = MAX(1, SDL_GetTicks());
-                                SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+                                if (!fast_graphics)
+                                {
+                                    fade_start = MAX(1, SDL_GetTicks());
+                                    SDL_BlitSurface( Screen, NULL,
+                                                     prev_sfc, NULL );
+                                }
                                 finished = 1;
                             }
                             else if (
@@ -1118,9 +1197,12 @@ int GameLoop()
                                     player.room.y += 2;
                                     ResetObjects();
 
-                                    fade_start = MAX(1, SDL_GetTicks());
-                                    SDL_BlitSurface( Screen, NULL,
-                                                     prev_sfc, NULL );
+                                    if (!fast_graphics)
+                                    {
+                                        fade_start = MAX(1, SDL_GetTicks());
+                                        SDL_BlitSurface( Screen, NULL,
+                                                         prev_sfc, NULL );
+                                    }
                                 }
                             }
                             break;
@@ -1138,9 +1220,12 @@ int GameLoop()
                                     player.room.y -= 2;
                                     ResetObjects();
 
-                                    fade_start = MAX(1, SDL_GetTicks());
-                                    SDL_BlitSurface( Screen, NULL,
-                                                     prev_sfc, NULL );
+                                    if (!fast_graphics)
+                                    {
+                                        fade_start = MAX(1, SDL_GetTicks());
+                                        SDL_BlitSurface( Screen, NULL,
+                                                         prev_sfc, NULL );
+                                    }
                                 }
                                 else
                                 {
@@ -1153,9 +1238,12 @@ int GameLoop()
                                     follow_player = 0;
                                     ResetObjects();
 
-                                    fade_start = MAX(1, SDL_GetTicks());
-                                    SDL_BlitSurface( Screen, NULL,
-                                                     prev_sfc, NULL );
+                                    if (!fast_graphics)
+                                    {
+                                        fade_start = MAX(1, SDL_GetTicks());
+                                        SDL_BlitSurface( Screen, NULL,
+                                                         prev_sfc, NULL );
+                                    }
                                 }
                             }
                             break;
@@ -1172,15 +1260,23 @@ int GameLoop()
                                 player.room.quad = 0;
                                 ResetObjects();
 
-                                fade_start = MAX(1, SDL_GetTicks());
-                                SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+                                if (!fast_graphics)
+                                {
+                                    fade_start = MAX(1, SDL_GetTicks());
+                                    SDL_BlitSurface( Screen, NULL,
+                                                     prev_sfc, NULL );
+                                }
                             }
                             else if ( player.level == total_num_levels - 1 &&
                                       PlayerOnExit(&exit_final_room) )
                             {
                                 NextState = WinScreen;
-                                fade_start = MAX(1, SDL_GetTicks());
-                                SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+                                if (!fast_graphics)
+                                {
+                                    fade_start = MAX(1, SDL_GetTicks());
+                                    SDL_BlitSurface( Screen, NULL,
+                                                     prev_sfc, NULL );
+                                }
                                 finished = 1;
                             }
                             else if (
@@ -1195,9 +1291,12 @@ int GameLoop()
                                     player.room.y += 2;
                                     ResetObjects();
 
-                                    fade_start = MAX(1, SDL_GetTicks());
-                                    SDL_BlitSurface( Screen, NULL,
-                                                     prev_sfc, NULL );
+                                    if (!fast_graphics)
+                                    {
+                                        fade_start = MAX(1, SDL_GetTicks());
+                                        SDL_BlitSurface( Screen, NULL,
+                                                         prev_sfc, NULL );
+                                    }
                                 }
                             }
                             else if (
@@ -1212,9 +1311,12 @@ int GameLoop()
                                     player.room.y -= 2;
                                     ResetObjects();
 
-                                    fade_start = MAX(1, SDL_GetTicks());
-                                    SDL_BlitSurface( Screen, NULL,
-                                                     prev_sfc, NULL );
+                                    if (!fast_graphics)
+                                    {
+                                        fade_start = MAX(1, SDL_GetTicks());
+                                        SDL_BlitSurface( Screen, NULL,
+                                                         prev_sfc, NULL );
+                                    }
                                 }
                                 else
                                 {
@@ -1227,9 +1329,12 @@ int GameLoop()
                                     follow_player = 0;
                                     ResetObjects();
 
-                                    fade_start = MAX(1, SDL_GetTicks());
-                                    SDL_BlitSurface( Screen, NULL,
-                                                     prev_sfc, NULL );
+                                    if (!fast_graphics)
+                                    {
+                                        fade_start = MAX(1, SDL_GetTicks());
+                                        SDL_BlitSurface( Screen, NULL,
+                                                         prev_sfc, NULL );
+                                    }
                                 }
                             }
                             break;
@@ -1312,9 +1417,9 @@ int WinScreen()
 
     win_fnt = TTF_OpenFont(FONT_NAME, 24);
     win_a_txt = TTF_RenderText_Shaded( win_fnt, "You have escaped the cube",
-                                       text_fg, text_bg );
+                                       def_text_fg, def_text_bg );
     win_b_txt = TTF_RenderText_Shaded( win_fnt, "Good job!",
-                                       text_fg, text_bg );
+                                       def_text_fg, def_text_bg );
 
     while (!finished)
     {
@@ -1410,9 +1515,9 @@ int ConfirmMessage()
     char *msg = (char *)state_arg;
     
     fnt = TTF_OpenFont(FONT_NAME, 20);
-    prompt_txt = TTF_RenderText_Shaded(fnt, msg, text_fg, text_bg);
-    yes_txt = TTF_RenderText_Shaded(fnt, "Yes", text_fg, text_bg);
-    no_txt = TTF_RenderText_Shaded(fnt, "No", text_fg, text_bg);
+    prompt_txt = TTF_RenderText_Shaded(fnt, msg, def_text_fg, def_text_bg);
+    yes_txt = TTF_RenderText_Shaded(fnt, "Yes", def_text_fg, def_text_bg);
+    no_txt = TTF_RenderText_Shaded(fnt, "No", def_text_fg, def_text_bg);
     back_sfc = NewSurface( SDL_SWSURFACE, Screen->format,
                            prompt_txt->w + 4, prompt_txt->h * 2 + 4 );
     SDL_FillRect(back_sfc, NULL, black);

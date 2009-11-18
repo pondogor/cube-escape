@@ -312,7 +312,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
         x2 = player.move_x;
         y1 = player.room.y;
         y2 = player.move_y;
-        if (player.traversing == TRAVERSE_FOLLOW && rotation == ROTATE_NONE)
+        if (player.traversing == TRAVERSE_FOLLOW && rotating == ROTATE_NONE)
         {
             x1 = player.to_room.x;
             x2 = player.move_x_opp;
@@ -414,10 +414,10 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
     }
 
     /* Set multiplicative factor for quad shading. */
-    if ( rotation == ROTATE_CCWISE || rotation == ROTATE_CWISE ||
-         rotation == ROTATE_NONE )
+    if ( rotating == ROTATE_CCWISE || rotating == ROTATE_CWISE ||
+         rotating == ROTATE_NONE )
         factor = 1.0f;
-    else if (rotation == ROTATE_LEFT || rotation == ROTATE_RIGHT)
+    else if (rotating == ROTATE_LEFT || rotating == ROTATE_RIGHT)
     {
         diff1 = fabs( copy_points[quads[n_quad][0]].x -
                       copy_points[quads[n_quad][1]].x );
@@ -431,7 +431,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
             factor = MIN(diff1, diff2);
         factor /= 2.0f;
     }
-    else if (rotation == ROTATE_UP || rotation == ROTATE_DOWN)
+    else if (rotating == ROTATE_UP || rotating == ROTATE_DOWN)
     {
         diff1 = fabs( copy_points[quads[n_quad][0]].y -
                       copy_points[quads[n_quad][1]].y );
@@ -454,7 +454,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
         if (player.move_x > SPRITE_SIZE)
             player.move_x = SPRITE_SIZE;
         player.move_x *= player.x_dir;
-        if (!player.traversing)
+        if (player.traversing == NOT_TRAVERSING)
         {
             player.move_x_opp =
                 SPRITE_SIZE * ticks / PLAYER_MOVE_TIME - SPRITE_SIZE;
@@ -484,7 +484,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
         if (player.move_y > SPRITE_SIZE)
             player.move_y = SPRITE_SIZE;
         player.move_y *= player.y_dir;
-        if (!player.traversing)
+        if (player.traversing == NOT_TRAVERSING)
         {
             player.move_y_opp =
                 SPRITE_SIZE * ticks / PLAYER_MOVE_TIME - SPRITE_SIZE;
@@ -593,14 +593,21 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                                         exit_dn_pal_cpy[color].b );
                     SDL_GetRGB(color, Screen->format, &ex_r, &ex_g, &ex_b);
                     ex_r *= factor;  ex_g *= factor;  ex_b *= factor;
-                    ex_a = MAX( abs(SPRITE_SIZE / 2 - x2 % SPRITE_SIZE),
-                                abs(SPRITE_SIZE / 2 - y2 % SPRITE_SIZE) );
-                    ex_a = 256 * ex_a * 2 / SPRITE_SIZE;
-                    ex_a = MAX(0, MIN(255, ex_a));
-                    cpy_r = (Uint8)((ex_a * ex_r + (255 - ex_a) * r) / 256);
-                    cpy_g = (Uint8)((ex_a * ex_g + (255 - ex_a) * g) / 256);
-                    cpy_b = (Uint8)((ex_a * ex_b + (255 - ex_a) * b) / 256);
-                    color = SDL_MapRGB(dst->format, cpy_r, cpy_g, cpy_b);
+                    if (!fast_graphics)
+                    {
+                        ex_a = MAX( abs(SPRITE_SIZE / 2 - x2 % SPRITE_SIZE),
+                                    abs(SPRITE_SIZE / 2 - y2 % SPRITE_SIZE) );
+                        ex_a = 256 - 256 * ex_a * 2 / SPRITE_SIZE;
+                        ex_a = MAX(0, MIN(255, ex_a));
+                        cpy_r = (Uint8)((ex_a * ex_r + (255 - ex_a) * r) / 256);
+                        cpy_g = (Uint8)((ex_a * ex_g + (255 - ex_a) * g) / 256);
+                        cpy_b = (Uint8)((ex_a * ex_b + (255 - ex_a) * b) / 256);
+                        color = SDL_MapRGB(dst->format, cpy_r, cpy_g, cpy_b);
+                    }
+                    else
+                    {
+                        color = SDL_MapRGB(dst->format, ex_r, ex_g, ex_b);
+                    }
                     SetPixel_32(dst, x1, y1, color);
                 }
             }
@@ -627,14 +634,21 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                                         exit_up_pal_cpy[color].b );
                     SDL_GetRGB(color, Screen->format, &ex_r, &ex_g, &ex_b);
                     ex_r *= factor;  ex_g *= factor;  ex_b *= factor;
-                    ex_a = MAX( abs(SPRITE_SIZE / 2 - x2 % SPRITE_SIZE),
-                                abs(SPRITE_SIZE / 2 - y2 % SPRITE_SIZE) );
-                    ex_a = 256 - 256 * ex_a * 2 / SPRITE_SIZE;
-                    ex_a = MAX(0, MIN(255, ex_a));
-                    cpy_r = (Uint8)((ex_a * ex_r + (255 - ex_a) * r) / 256);
-                    cpy_g = (Uint8)((ex_a * ex_g + (255 - ex_a) * g) / 256);
-                    cpy_b = (Uint8)((ex_a * ex_b + (255 - ex_a) * b) / 256);
-                    color = SDL_MapRGB(dst->format, cpy_r, cpy_g, cpy_b);
+                    if (!fast_graphics)
+                    {
+                        ex_a = MAX( abs(SPRITE_SIZE / 2 - x2 % SPRITE_SIZE),
+                                    abs(SPRITE_SIZE / 2 - y2 % SPRITE_SIZE) );
+                        ex_a = 256 - 256 * ex_a * 2 / SPRITE_SIZE;
+                        ex_a = MAX(0, MIN(255, ex_a));
+                        cpy_r = (Uint8)((ex_a * ex_r + (255 - ex_a) * r) / 256);
+                        cpy_g = (Uint8)((ex_a * ex_g + (255 - ex_a) * g) / 256);
+                        cpy_b = (Uint8)((ex_a * ex_b + (255 - ex_a) * b) / 256);
+                        color = SDL_MapRGB(dst->format, cpy_r, cpy_g, cpy_b);
+                    }
+                    else
+                    {
+                        color = SDL_MapRGB(dst->format, ex_r, ex_g, ex_b);
+                    }
                     SetPixel_32(dst, x1, y1, color);
                 }
             }
@@ -664,12 +678,19 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                     ex_r *= factor;  ex_g *= factor;  ex_b *= factor;
                     ex_a = MAX( abs(SPRITE_SIZE / 2 - x2 % SPRITE_SIZE),
                                 abs(SPRITE_SIZE / 2 - y2 % SPRITE_SIZE) );
-                    ex_a = 256 - 256 * ex_a * 2 / SPRITE_SIZE;
-                    ex_a = MAX(0, MIN(255, ex_a));
-                    cpy_r = (Uint8)((ex_a * ex_r + (255 - ex_a) * r) / 256);
-                    cpy_g = (Uint8)((ex_a * ex_g + (255 - ex_a) * g) / 256);
-                    cpy_b = (Uint8)((ex_a * ex_b + (255 - ex_a) * b) / 256);
-                    color = SDL_MapRGB(dst->format, cpy_r, cpy_g, cpy_b);
+                    if (!fast_graphics)
+                    {
+                        ex_a = 256 - 256 * ex_a * 2 / SPRITE_SIZE;
+                        ex_a = MAX(0, MIN(255, ex_a));
+                        cpy_r = (Uint8)((ex_a * ex_r + (255 - ex_a) * r) / 256);
+                        cpy_g = (Uint8)((ex_a * ex_g + (255 - ex_a) * g) / 256);
+                        cpy_b = (Uint8)((ex_a * ex_b + (255 - ex_a) * b) / 256);
+                        color = SDL_MapRGB(dst->format, cpy_r, cpy_g, cpy_b);
+                    }
+                    else
+                    {
+                        color = SDL_MapRGB(dst->format, ex_r, ex_g, ex_b);
+                    }
                     SetPixel_32(dst, x1, y1, color);
                 }
             }
