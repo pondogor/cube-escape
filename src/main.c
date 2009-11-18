@@ -78,8 +78,8 @@ void InitGame( time_t seed )
     dk_blue = SDL_MapRGB(fmt, 0, 0, 63);
     faded_blue = SDL_MapRGB(fmt, 31, 31, 63);
 
-    SDL_GetRGB(white, fmt, &text_fg.r, &text_fg.g, &text_fg.b);
-    SDL_GetRGB(black, fmt, &text_bg.r, &text_bg.g, &text_bg.b);
+    SDL_GetRGB(white, fmt, &def_text_fg.r, &def_text_fg.g, &def_text_fg.b);
+    SDL_GetRGB(black, fmt, &def_text_bg.r, &def_text_bg.g, &def_text_bg.b);
     SDL_GetRGB(faded_blue, fmt, &hi_bg.r, &hi_bg.g, &hi_bg.b);
     SDL_GetRGB(black, fmt, &no_hi_bg.r, &no_hi_bg.g, &no_hi_bg.b);
 
@@ -106,26 +106,44 @@ void InitGame( time_t seed )
     }
     for (x = 0; x < SPRITE_SIZE; ++x)
     {
-        exit_up_pal[x].r = 0;
         if (x < SPRITE_SIZE / 2)
+        {
+            exit_up_pal[x].r = 64 * 2 * x / SPRITE_SIZE;
             exit_up_pal[x].g = 256 * 2 * x / SPRITE_SIZE;
+            exit_up_pal[x].b = 64 * 2 * x / SPRITE_SIZE;
+        }
         else
+        {
+            exit_up_pal[x].r = 127 - 64 * 2 * x / SPRITE_SIZE;
             exit_up_pal[x].g = 255 - 256 * 2 * x / SPRITE_SIZE;
-        exit_up_pal[x].b = 0;
+            exit_up_pal[x].b = 127 - 64 * 2 * x / SPRITE_SIZE;
+        }
 
-        exit_dn_pal[x].r = 0;
-        exit_dn_pal[x].g = 0;
         if (x < SPRITE_SIZE / 2)
-            exit_dn_pal[x].b = 255 - 256 * 2 * x / SPRITE_SIZE;
-        else
+        {
+            exit_dn_pal[x].r = 64 * 2 * x / SPRITE_SIZE;
+            exit_dn_pal[x].g = 64 * 2 * x / SPRITE_SIZE;
             exit_dn_pal[x].b = 256 * 2 * x / SPRITE_SIZE;
+        }
+        else
+        {
+            exit_dn_pal[x].r = 127 - 64 * 2 * x / SPRITE_SIZE;
+            exit_dn_pal[x].g = 127 - 64 * 2 * x / SPRITE_SIZE;
+            exit_dn_pal[x].b = 255 - 256 * 2 * x / SPRITE_SIZE;
+        }
 
         if (x < SPRITE_SIZE / 2)
+        {
             exit_final_pal[x].r = 256 * 2 * x / SPRITE_SIZE;
+            exit_final_pal[x].g = 64 * 2 * x / SPRITE_SIZE;
+            exit_final_pal[x].b = 64 * 2 * x / SPRITE_SIZE;
+        }
         else
+        {
             exit_final_pal[x].r = 255 - 256 * 2 * x / SPRITE_SIZE;
-        exit_final_pal[x].g = 0;
-        exit_final_pal[x].b = 0;
+            exit_final_pal[x].g = 127 - 64 * 2 * x / SPRITE_SIZE;
+            exit_final_pal[x].b = 127 - 64 * 2 * x / SPRITE_SIZE;
+        }
     }
     SDL_SetColors(exit_up_sfc, exit_up_pal, 0, SPRITE_SIZE);
     SDL_SetColors(exit_dn_sfc, exit_dn_pal, 0, SPRITE_SIZE);
@@ -150,7 +168,7 @@ void InitGame( time_t seed )
     k_spc = 0;
 
     n_frames = 0;
-    n_ticks = 0;
+    total_ticks = 0;
 
     playing = 0;
     total_num_levels = prev_num_levels = 0;
@@ -170,6 +188,7 @@ void InitGame( time_t seed )
     exit_choice = DEFAULT_EXIT_DISTANCE_CHOICE;
     total_num_levels = DEFAULT_NUM_LEVELS;
     start_level = DEFAULT_START_LEVEL;
+    fast_graphics = DEFAULT_GRAPHICS_CHOICE;
 }
 
 
@@ -425,7 +444,7 @@ void ResetObjects()
     player.traversing = NOT_TRAVERSING;
 
     rotation_start = 0;
-    rotation = ROTATE_NONE;
+    rotating = ROTATE_NONE;
 
     SearchMaze(&player.room);
 }
@@ -573,7 +592,7 @@ int RotateCube( int traversing )
     }
 
     for (i = 0; i < NUM_POINTS; ++i)
-        switch (rotation)
+        switch (rotating)
         {
             case ROTATE_UP:
                 RotatePoints( &points[i].y, &points[i].z,
@@ -861,19 +880,19 @@ void MovePlayer( int dir )
             switch (player.orient)
             {
                 case UP:
-                    rotation = ROTATE_DOWN;
+                    rotating = ROTATE_DOWN;
                     break;
 
                 case RIGHT:
-                    rotation = ROTATE_RIGHT;
+                    rotating = ROTATE_RIGHT;
                     break;
 
                 case DOWN:
-                    rotation = ROTATE_UP;
+                    rotating = ROTATE_UP;
                     break;
 
                 case LEFT:
-                    rotation = ROTATE_LEFT;
+                    rotating = ROTATE_LEFT;
                     break;
 
             }
@@ -883,19 +902,19 @@ void MovePlayer( int dir )
             switch (player.orient)
             {
                 case UP:
-                    rotation = ROTATE_LEFT;
+                    rotating = ROTATE_LEFT;
                     break;
 
                 case RIGHT:
-                    rotation = ROTATE_DOWN;
+                    rotating = ROTATE_DOWN;
                     break;
 
                 case DOWN:
-                    rotation = ROTATE_RIGHT;
+                    rotating = ROTATE_RIGHT;
                     break;
 
                 case LEFT:
-                    rotation = ROTATE_UP;
+                    rotating = ROTATE_UP;
                     break;
 
             }
@@ -905,19 +924,19 @@ void MovePlayer( int dir )
             switch (player.orient)
             {
                 case UP:
-                    rotation = ROTATE_UP;
+                    rotating = ROTATE_UP;
                     break;
 
                 case RIGHT:
-                    rotation = ROTATE_LEFT;
+                    rotating = ROTATE_LEFT;
                     break;
 
                 case DOWN:
-                    rotation = ROTATE_DOWN;
+                    rotating = ROTATE_DOWN;
                     break;
 
                 case LEFT:
-                    rotation = ROTATE_RIGHT;
+                    rotating = ROTATE_RIGHT;
                     break;
 
             }
@@ -927,19 +946,19 @@ void MovePlayer( int dir )
             switch (player.orient)
             {
                 case UP:
-                    rotation = ROTATE_RIGHT;
+                    rotating = ROTATE_RIGHT;
                     break;
 
                 case RIGHT:
-                    rotation = ROTATE_UP;
+                    rotating = ROTATE_UP;
                     break;
 
                 case DOWN:
-                    rotation = ROTATE_LEFT;
+                    rotating = ROTATE_LEFT;
                     break;
 
                 case LEFT:
-                    rotation = ROTATE_DOWN;
+                    rotating = ROTATE_DOWN;
                     break;
 
             }
@@ -1037,8 +1056,8 @@ int main( int argc, char *argv[] )
         finished = FunctionState();
     }
 #ifdef DEBUG_DIAGNOSTICS
-    if (n_ticks > 0)
-        printf("Average FPS: %.2f\n", (float)n_frames * 1000.0f / n_ticks);
+    if (total_ticks > 0)
+        printf("Average FPS: %.2f\n", (float)n_frames * 1000.0f / total_ticks);
 #endif
     Quit(0);
 }

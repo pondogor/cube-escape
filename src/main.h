@@ -24,7 +24,7 @@
 #include "maze.h"
 
 
-/* These defines control debugging characteristics of the game. */
+/* These defines control debugging states. */
 /*#define DEBUG_DIAGNOSTICS*/
 /*#define DEBUG_ORIENT_CORNERS*/
 /*#define DEBUG_SHOW_MAP*/
@@ -64,7 +64,8 @@
 
 #define DEFAULT_EXIT_DISTANCE_CHOICE  2
 #define DEFAULT_NUM_LEVELS  6
-#define DEFAULT_START_LEVEL  1
+#define DEFAULT_START_LEVEL  2
+#define DEFAULT_GRAPHICS_CHOICE 0
 
 #define MIN( x, y )  ((x) < (y) ? (x) : (y))
 #define MAX( x, y )  ((x) > (y) ? (x) : (y))
@@ -91,8 +92,8 @@ SDL_Color exit_up_pal[SPRITE_SIZE],
           exit_up_pal_cpy[SPRITE_SIZE],
           exit_dn_pal_cpy[SPRITE_SIZE],
           exit_final_pal_cpy[SPRITE_SIZE],
-          text_fg,
-          text_bg,
+          def_text_fg,
+          def_text_bg,
           hi_bg,
           no_hi_bg;
 
@@ -119,10 +120,11 @@ int maze_size,
     start_level,
     prev_num_levels,
     current_level,
-    rotation,
+    rotating,
     show_full_map,
     follow_player,
-    playing;
+    playing,
+    fast_graphics;
 
 Uint32 white,
        grey,
@@ -158,7 +160,7 @@ float player_zoom_speed,
 Uint32 **unhide_starts[NUM_QUADS],
        rotation_start,
        fade_start,
-       n_ticks;
+       total_ticks;
 
 int (*FunctionState)(),
     (*NextState)(),

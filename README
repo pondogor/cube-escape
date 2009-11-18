@@ -1,4 +1,4 @@
-Cube Escape v0.7, written by Sean McKean
+Cube Escape v0.7, written by Sean McKean, Gamechild Software
 
 Description:
     You are inside a cube made up of numerous shells, with a maze etched
@@ -26,6 +26,8 @@ Controls:
         'Number of levels' controls how many shells to calculate before
           final exit.
         'Starting level' controls which shell to start player on.
+        'Advanced graphics' controls whether or not the game makes use
+          of alpha-fade effects and gradual rotations.
 
     In game:
         Move player around maze with arrow keys. Holding shift down and
