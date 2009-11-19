@@ -25,9 +25,12 @@
 
 int IntroScreen( void );
 int OptionsScreen( void );
-int GameLoop( void );
+int GamePlay( void );
 int WinScreen( void );
 int ConfirmMessage( void );
+
+void ZoomIn( void );
+void ZoomOut( void );
 void UpdateNumberText( char *str, SDL_Surface *sfc, SDL_Surface *choice_sfc,
                        int cw, int ch  );
 

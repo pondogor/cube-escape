@@ -23,6 +23,7 @@
 
 #include "SDL.h"
 #include "SDL_ttf.h"
+#include "SDL_image.h"
 
 #include "main.h"
 
@@ -32,11 +33,17 @@ const float hf_pi = M_PI / 2.0f;
 
 void InitGame( time_t seed )
 {
-    SDL_PixelFormat *fmt = NULL;
-    SDL_Rect rect;
+    TTF_Font *fnt = NULL;
+    SDL_PixelFormat eight_bit_fmt,
+                    *fmt = NULL;
+    SDL_Rect dst_rect;
+    SDL_Color descend_fg = { 63, 63, 255 },
+              ascend_fg = { 63, 255, 63 },
+              exit_fg = { 255, 63, 63 };
     SDL_Event evt;
     int quad = 0,
-        x = 0;
+        x = 0,
+        y = 0;
 
     srand(seed);
 
@@ -64,11 +71,16 @@ void InitGame( time_t seed )
     }
 
     white = SDL_MapRGB(fmt, 255, 255, 255);
+    SDL_GetRGB(white, fmt, &white_c.r, &white_c.g, &white_c.b);
     grey = SDL_MapRGB(fmt, 127, 127, 127);
+    SDL_GetRGB(grey, fmt, &grey_c.r, &grey_c.g, &grey_c.b);
     dk_grey = SDL_MapRGB(fmt, 63, 63, 63);
+    SDL_GetRGB(dk_grey, fmt, &dk_grey_c.r, &dk_grey_c.g, &dk_grey_c.b);
     black = SDL_MapRGB(fmt, 0, 0, 0);
+    SDL_GetRGB(black, fmt, &black_c.r, &black_c.g, &black_c.b);
     red = SDL_MapRGB(fmt, 255, 0, 0);
     green = SDL_MapRGB(fmt, 0, 255, 0);
+    SDL_GetRGB(green, fmt, &green_c.r, &green_c.g, &green_c.b);
     blue = SDL_MapRGB(fmt, 0, 0, 255);
     med_red = SDL_MapRGB(fmt, 127, 0, 0);
     med_green = SDL_MapRGB(fmt, 0, 127, 0);
@@ -77,32 +89,35 @@ void InitGame( time_t seed )
     dk_green = SDL_MapRGB(fmt, 0, 63, 0);
     dk_blue = SDL_MapRGB(fmt, 0, 0, 63);
     faded_blue = SDL_MapRGB(fmt, 31, 31, 63);
+    SDL_GetRGB(faded_blue, fmt, &mouse_c.r, &mouse_c.g, &mouse_c.b);
+    ckey = SDL_MapRGB(fmt, 255, 255, 0);
 
-    SDL_GetRGB(white, fmt, &def_text_fg.r, &def_text_fg.g, &def_text_fg.b);
-    SDL_GetRGB(black, fmt, &def_text_bg.r, &def_text_bg.g, &def_text_bg.b);
-    SDL_GetRGB(faded_blue, fmt, &hi_bg.r, &hi_bg.g, &hi_bg.b);
-    SDL_GetRGB(black, fmt, &no_hi_bg.r, &no_hi_bg.g, &no_hi_bg.b);
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    alpha_mask = 0x000000ff;
+#else
+    alpha_mask = 0xff000000;
+#endif
 
-    player_sfc = NewSurface(SDL_SWSURFACE, fmt, SPRITE_SIZE, SPRITE_SIZE);
+    player_sfc = NewSurface(SCREEN_FLAGS, fmt, SPRITE_SIZE, SPRITE_SIZE);
     DrawFilledGradientCircle( player_sfc, SPRITE_SIZE, SPRITE_SIZE / 2,
                               SPRITE_SIZE / 2, green, dk_green );
 
-    exit_up_sfc = SDL_CreateRGBSurface( SDL_SWSURFACE,
+    exit_up_sfc = SDL_CreateRGBSurface( SCREEN_FLAGS,
                                         SPRITE_SIZE, SPRITE_SIZE, 8,
                                         0, 0, 0, 0 );
-    exit_dn_sfc = SDL_CreateRGBSurface( SDL_SWSURFACE,
+    exit_dn_sfc = SDL_CreateRGBSurface( SCREEN_FLAGS,
                                         SPRITE_SIZE, SPRITE_SIZE, 8,
                                         0, 0, 0, 0 );
-    exit_final_sfc = SDL_CreateRGBSurface( SDL_SWSURFACE,
+    exit_final_sfc = SDL_CreateRGBSurface( SCREEN_FLAGS,
                                            SPRITE_SIZE, SPRITE_SIZE, 8,
                                            0, 0, 0, 0 );
     for (x = 0; x < SPRITE_SIZE / 2; ++x)
     {
-        rect.x = rect.y = x;
-        rect.w = rect.h = SPRITE_SIZE - x * 2;
-        SDL_FillRect(exit_up_sfc, &rect, x);
-        SDL_FillRect(exit_dn_sfc, &rect, x);
-        SDL_FillRect(exit_final_sfc, &rect, x);
+        dst_rect.x = dst_rect.y = x;
+        dst_rect.w = dst_rect.h = SPRITE_SIZE - x * 2;
+        SDL_FillRect(exit_up_sfc, &dst_rect, x);
+        SDL_FillRect(exit_dn_sfc, &dst_rect, x);
+        SDL_FillRect(exit_final_sfc, &dst_rect, x);
     }
     for (x = 0; x < SPRITE_SIZE; ++x)
     {
@@ -156,6 +171,79 @@ void InitGame( time_t seed )
     prev_sfc = SDL_DisplayFormat(Screen);
     SDL_FillRect(prev_sfc, NULL, black);
 
+    button_sfcs[BUTTON_UP] = CreateNewButton(72, 24, "up-arrow.png");
+    button_rects[BUTTON_UP].x = CENTER_X_SCREEN(button_sfcs[BUTTON_UP]->w);
+    button_rects[BUTTON_UP].y = 0;
+    button_rects[BUTTON_UP].w = button_sfcs[BUTTON_UP]->w;
+    button_rects[BUTTON_UP].h = button_sfcs[BUTTON_UP]->h;
+
+    button_sfcs[BUTTON_DOWN] = CreateNewButton(72, 24, "down-arrow.png");
+    button_rects[BUTTON_DOWN].x = CENTER_X_SCREEN(button_sfcs[BUTTON_DOWN]->w);
+    button_rects[BUTTON_DOWN].y = SCREEN_H - button_sfcs[BUTTON_DOWN]->h;
+    button_rects[BUTTON_DOWN].w = button_sfcs[BUTTON_DOWN]->w;
+    button_rects[BUTTON_DOWN].h = button_sfcs[BUTTON_DOWN]->h;
+
+    button_sfcs[BUTTON_LEFT] = CreateNewButton(24, 72, "left-arrow.png");
+    button_rects[BUTTON_LEFT].x = 0;
+    button_rects[BUTTON_LEFT].y = CENTER_Y_SCREEN(button_sfcs[BUTTON_DOWN]->h);
+    button_rects[BUTTON_LEFT].w = button_sfcs[BUTTON_LEFT]->w;
+    button_rects[BUTTON_LEFT].h = button_sfcs[BUTTON_LEFT]->h;
+
+    button_sfcs[BUTTON_RIGHT] = CreateNewButton(24, 72, "right-arrow.png");
+    button_rects[BUTTON_RIGHT].x = SCREEN_W - button_sfcs[BUTTON_RIGHT]->w;
+    button_rects[BUTTON_RIGHT].y =
+        CENTER_Y_SCREEN(button_sfcs[BUTTON_RIGHT]->h);
+    button_rects[BUTTON_RIGHT].w = button_sfcs[BUTTON_RIGHT]->w;
+    button_rects[BUTTON_RIGHT].h = button_sfcs[BUTTON_RIGHT]->h;
+
+    button_sfcs[BUTTON_CWISE] = CreateNewButton(40, 40, "turn-cwise.png");
+    button_rects[BUTTON_CWISE].x = SCREEN_W - button_sfcs[BUTTON_CWISE]->w;
+    button_rects[BUTTON_CWISE].y = 0;
+    button_rects[BUTTON_CWISE].w = button_sfcs[BUTTON_CWISE]->w;
+    button_rects[BUTTON_CWISE].h = button_sfcs[BUTTON_CWISE]->h;
+
+    button_sfcs[BUTTON_CCWISE] = CreateNewButton(40, 40, "turn-ccwise.png");
+    button_rects[BUTTON_CCWISE].x = 0;
+    button_rects[BUTTON_CCWISE].y = 0;
+    button_rects[BUTTON_CCWISE].w = button_sfcs[BUTTON_CCWISE]->w;
+    button_rects[BUTTON_CCWISE].h = button_sfcs[BUTTON_CCWISE]->h;
+
+    button_sfcs[BUTTON_ZOOM_IN] = CreateNewButton(40, 40, "zoom-in.png");
+    button_rects[BUTTON_ZOOM_IN].x =
+        SCREEN_W - button_sfcs[BUTTON_ZOOM_IN]->w;
+    button_rects[BUTTON_ZOOM_IN].y =
+        SCREEN_H - button_sfcs[BUTTON_ZOOM_IN]->h;
+    button_rects[BUTTON_ZOOM_IN].w = button_sfcs[BUTTON_ZOOM_IN]->w;
+    button_rects[BUTTON_ZOOM_IN].h = button_sfcs[BUTTON_ZOOM_IN]->h;
+
+    button_sfcs[BUTTON_ZOOM_OUT] = CreateNewButton(40, 40, "zoom-out.png");
+    button_rects[BUTTON_ZOOM_OUT].x =
+        SCREEN_W - button_sfcs[BUTTON_ZOOM_OUT]->w * 2 + 1;
+    button_rects[BUTTON_ZOOM_OUT].y =
+        SCREEN_H - button_sfcs[BUTTON_ZOOM_OUT]->h;
+    button_rects[BUTTON_ZOOM_OUT].w = button_sfcs[BUTTON_ZOOM_OUT]->w;
+    button_rects[BUTTON_ZOOM_OUT].h = button_sfcs[BUTTON_ZOOM_OUT]->h;
+
+    fnt = TTF_OpenFont(FONT_NAME, 24);
+
+    descend_txt_sfc = CreateShadowedText( fnt, "Press 'd' to descend a level",
+                                          descend_fg );
+    descend_rect.x = CENTER_X_SCREEN(descend_txt_sfc->w);
+    descend_rect.y =
+        SCREEN_H - button_sfcs[BUTTON_ZOOM_IN]->h - descend_txt_sfc->h - 4;
+    ascend_txt_sfc = CreateShadowedText( fnt, "Press 'a' to ascend a level",
+                                         ascend_fg );
+    ascend_rect.x = CENTER_X_SCREEN(ascend_txt_sfc->w);
+    ascend_rect.y =
+        SCREEN_H - button_sfcs[BUTTON_ZOOM_IN]->h - ascend_txt_sfc->h - 4;
+    exit_txt_sfc = CreateShadowedText( fnt, "Press 'a' to exit the maze",
+                                       exit_fg );
+    exit_rect.x = CENTER_X_SCREEN(exit_txt_sfc->w);
+    exit_rect.y =
+        SCREEN_H - button_sfcs[BUTTON_ZOOM_IN]->h - exit_txt_sfc->h - 4;
+
+    TTF_CloseFont(fnt);
+
     show_full_map = 0;
 
     k_return = 0;
@@ -182,13 +270,17 @@ void InitGame( time_t seed )
         connects[quad] = NULL;
     }
 
+    maze_sfc = NewSurface(SCREEN_FLAGS, fmt, SCREEN_W, SCREEN_H);
+
     fade_start = 0;
     current_quad = 0;
+    move_by_mouse = 0;
 
     exit_choice = DEFAULT_EXIT_DISTANCE_CHOICE;
     total_num_levels = DEFAULT_NUM_LEVELS;
     start_level = DEFAULT_START_LEVEL;
     fast_graphics = DEFAULT_GRAPHICS_CHOICE;
+    show_ctrl_buttons = DEFAULT_SHOW_BUTTONS;
 }
 
 
@@ -197,7 +289,7 @@ void StartNewMaze()
     InitMazeStructure(prev_num_levels, total_num_levels);
     prev_num_levels = total_num_levels;
     ResetObjects();
-    NextState = GameLoop;
+    NextState = GamePlay;
 }
 
 
@@ -261,16 +353,15 @@ void InitMazeStructure( int old_num_levels, int num_levels )
     for (level = 0; level < num_levels; ++level)
     {
         size = LEVEL_SIZE(level);
-        quid_sfcs[level] = NewSurface( SDL_SWSURFACE, Screen->format,
+        quid_sfcs[level] = NewSurface( SCREEN_FLAGS, Screen->format,
                                        size, size );
         for (quad = 0; quad < NUM_QUADS; ++quad)
         {
             quad_sfcs[quad][level] =
-                NewSurface(SDL_SWSURFACE, Screen->format, size, size);
+                NewSurface(SCREEN_FLAGS, Screen->format, size, size);
             hide_sfcs[quad][level] =
-                NewAlphaSurface(SDL_SWSURFACE, Screen->format, size, size);
-            SDL_FillRect( hide_sfcs[quad][level], NULL,
-                          HIDE_COLOR | hide_sfcs[quad][level]->format->Amask );
+                NewAlphaSurface(SCREEN_FLAGS, Screen->format, size, size);
+            SDL_FillRect(hide_sfcs[quad][level], NULL, HIDE_COLOR);
             unhide_starts[quad][level] =
                 (Uint32 *)malloc(size * size * sizeof(Uint32));
             for (y = 0; y < size; ++y)
@@ -321,6 +412,8 @@ void InitMazeStructure( int old_num_levels, int num_levels )
     player_zoom = SPRITE_SIZE * 8;
     player_zoom_speed = player_zoom / PLAYER_ZOOM_SPEED_DIV;
 
+    redraw_maze = 1;
+
     points[0].x = -1.0f;  points[0].y = -1.0f;  points[0].z = +5.0f;
     points[1].x = +1.0f;  points[1].y = -1.0f;  points[1].z = +5.0f;
     points[2].x = +1.0f;  points[2].y = +1.0f;  points[2].z = +5.0f;
@@ -347,6 +440,7 @@ void InitMazeStructure( int old_num_levels, int num_levels )
 
     player.level = current_level = start_level - 1;
     maze_size = player.level * 4 - 1;
+
     if (maze_size == -1)
     {
         player.room.x = player.to_room.x = 0;
@@ -428,6 +522,11 @@ void InitMazeStructure( int old_num_levels, int num_levels )
 
         }
     }
+
+    RotatePalette(exit_up_sfc, exit_up_pal, exit_up_pal_cpy, SPRITE_SIZE, 0);
+    RotatePalette(exit_dn_sfc, exit_dn_pal, exit_dn_pal_cpy, SPRITE_SIZE, 0);
+    RotatePalette( exit_final_sfc, exit_final_pal, exit_final_pal_cpy,
+                   SPRITE_SIZE, 0 );
 
     SetRestorePoints();
 }
@@ -517,14 +616,7 @@ SDL_Surface *NewSurface( int flags, SDL_PixelFormat *fmt,
 SDL_Surface *NewAlphaSurface( int flags, SDL_PixelFormat *fmt,
                               Uint32 w, Uint32 h )
 {
-    Uint32 alpha_mask = 0;
     SDL_Surface *return_sfc = NULL;
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    alpha_mask = 0x000000ff;
-#else
-    alpha_mask = 0xff000000;
-#endif
 
     return_sfc = SDL_CreateRGBSurface( flags, w, h, fmt->BitsPerPixel,
                                        fmt->Rmask, fmt->Gmask,
@@ -537,6 +629,91 @@ SDL_Surface *NewAlphaSurface( int flags, SDL_PixelFormat *fmt,
     }
 
     return return_sfc;
+}
+
+
+SDL_Surface *CreateShadowedText( TTF_Font *fnt, const char *str, SDL_Color c )
+{
+    SDL_Surface *sfc = NULL,
+                *txt = NULL;
+    SDL_Rect dst_rect;
+    int x = 0,
+        y = 0;
+
+    txt = TTF_RenderText_Solid(fnt, str, black_c);
+    sfc = NewSurface(SCREEN_FLAGS, Screen->format, txt->w + 4, txt->h + 4);
+    SDL_FillRect(sfc, NULL, ckey);
+    SDL_SetColorKey(sfc, SDL_SRCCOLORKEY, ckey);
+    for (y = 0; y <= 4; ++y)
+        for (x = 0; x <= 4; ++x)
+        {
+            dst_rect.x = x;
+            dst_rect.y = y;
+            SDL_BlitSurface(txt, NULL, sfc, &dst_rect);
+        }
+    SDL_FreeSurface(txt);
+    txt = TTF_RenderText_Solid(fnt, str, c);
+    SDL_SetColorKey(txt, SDL_SRCCOLORKEY, 0);
+    dst_rect.x = 2;
+    dst_rect.y = 2;
+    SDL_BlitSurface(txt, NULL, sfc, &dst_rect);
+    SDL_FreeSurface(txt);
+
+    return sfc;
+}
+
+
+SDL_Surface *CreateNewButton( int w, int h, const char *img_file )
+{
+    SDL_Surface *temp_sfc = NULL,
+                *img_sfc = NULL,
+                *sfc = NULL;
+    SDL_PixelFormat fmt;
+    SDL_Rect rect;
+    int start_x = 0,
+        start_y = 0,
+        x = 0,
+        y = 0;
+    char path_name[80] = DATA_DIR;
+
+    fmt.BitsPerPixel = 8;
+    fmt.Rmask = 0;  fmt.Gmask = 0;  fmt.Bmask = 0;  fmt.Amask = 0;
+
+    sfc = NewSurface(SCREEN_FLAGS, &fmt, w, h);
+
+    SDL_FillRect(sfc, NULL, 0);
+    rect.x = 0;  rect.y = 0;  rect.w = w;  rect.h = 1;
+    SDL_FillRect(sfc, &rect, 1);
+    rect.x = 0;  rect.y = 0;  rect.w = 1;  rect.h = h;
+    SDL_FillRect(sfc, &rect, 1);
+    rect.x = 0;  rect.y = h - 1;  rect.w = w;  rect.h = 1;
+    SDL_FillRect(sfc, &rect, 1);
+    rect.x = w - 1;  rect.y = 0;  rect.w = 1;  rect.h = h;
+    SDL_FillRect(sfc, &rect, 1);
+
+    strcat(path_name, img_file);
+    temp_sfc = IMG_Load(path_name);
+    img_sfc = SDL_DisplayFormat(temp_sfc);
+    SDL_FreeSurface(temp_sfc);
+
+    start_x = sfc->w / 2 - img_sfc->w / 2;
+    start_y = sfc->h / 2 - img_sfc->h / 2;
+    for (y = 0; y < img_sfc->h; ++y)
+        for (x = 0; x < img_sfc->w; ++x)
+        {
+            if (GetPixel_32(img_sfc, x, y) == white)
+                SetPixel_8(sfc, start_x + x, start_y + y, 2);
+            else if (GetPixel_32(img_sfc, x, y) == green)
+                SetPixel_8(sfc, start_x + x, start_y + y, 3);
+        }
+    SDL_SetColors(sfc, &black_c, 0, 1);
+    SDL_SetColors(sfc, &grey_c, 1, 1);
+    SDL_SetColors(sfc, &white_c, 2, 1);
+    SDL_SetColors(sfc, &green_c, 3, 1);
+
+    SDL_FreeSurface(img_sfc);
+
+    return sfc;
 }
 
 
@@ -566,6 +743,8 @@ int RotateCube( int traversing )
         i = 0;
     float angle = hf_pi * (SDL_GetTicks() - rotation_start) / MAZE_ROTATE_TIME;
 
+    redraw_maze = 1;
+
     if (traversing != TRAVERSE_FOLLOW)
     {
         if (angle >= hf_pi)
@@ -579,7 +758,7 @@ int RotateCube( int traversing )
     else
     {
         if ( (float)(SDL_GetTicks() - player.move_ticks_start) /
-             PLAYER_MOVE_TIME > 0.5f )
+             PLAYER_KEY_MOVE_TIME > 0.5f )
         {
             angle = hf_pi;
             rotate_original = 1;
@@ -682,7 +861,7 @@ int RotateCube( int traversing )
 
 
 void RotatePalette( SDL_Surface *sfc, SDL_Color *palette, SDL_Color *copy,
-                    int size, int io, Uint32 ticks )
+                    int size, Uint32 ticks )
 {
     size_t sz_color = sizeof(SDL_Color);
     int offset = 0,
@@ -691,16 +870,8 @@ void RotatePalette( SDL_Surface *sfc, SDL_Color *palette, SDL_Color *copy,
     offset = (ticks % EXIT_PALETTE_TIME) * size / EXIT_PALETTE_TIME;
     end = size - offset - 1;
 
-    if (io == INWARD)
-    {
-        memcpy(copy, palette + end, sz_color * offset);
-        memcpy(copy + offset, palette, sz_color * end);
-    }
-    else  /* io == OUTWARD */
-    {
-        memcpy(copy, palette + offset, sz_color * end);
-        memcpy(copy + end, palette, sz_color * offset);
-    }
+    memcpy(copy, palette + end, sz_color * offset);
+    memcpy(copy + offset, palette, sz_color * end);
 
     SDL_SetColors(sfc, copy, 0, SPRITE_SIZE / 2);
 }
@@ -708,7 +879,7 @@ void RotatePalette( SDL_Surface *sfc, SDL_Color *palette, SDL_Color *copy,
 
 void SetUnhideTicks( int quad, int x, int y, Uint32 ticks )
 {
-    Uint32 *set = &unhide_starts[quad][current_level][x + y * maze_size];
+    Uint32 *set = &unhide_starts[quad][player.level][x + y * maze_size];
     if (*set == 0)
         *set = ticks;
 }
@@ -775,10 +946,16 @@ void SearchMaze( SfcMazeRoom_t *from )
 }
 
 
-void MovePlayer( int dir )
+void MovePlayerByMouse()
+{
+
+}
+
+
+void MovePlayerByKey( int dir )
 {
     int over_edge = 0,
-        hf_sz = maze_size / 2,
+        half_sz = maze_size / 2,
         i = 0,
         x = 0,
         y = 0;
@@ -851,21 +1028,21 @@ void MovePlayer( int dir )
                           player.room.y + player.y_dir ) != WALL_COLOR )
 
         {
-            player.move_ticks_start = SDL_GetTicks();
-            player.to_room.quad = player.room.quad;
+            player.move_ticks_start = MAX(1, SDL_GetTicks());
             player.to_room.x = player.room.x + player.x_dir;
             player.to_room.y = player.room.y + player.y_dir;
+            player.to_room.quad = player.room.quad;
+            SearchMaze(&player.to_room);
         }
         else
         {
             player.x_dir = 0;
             player.y_dir = 0;
         }
-        SearchMaze(&player.to_room);
         return;
     }
 
-    for (i = 0; i < hf_sz * 4; ++i)
+    for (i = 0; i < half_sz * 4; ++i)
     {
         x = connects[current_quad][player.level][i].fr_x;
         y = connects[current_quad][player.level][i].fr_y;
@@ -969,12 +1146,12 @@ void MovePlayer( int dir )
     player.to_room.x = connects[current_quad][player.level][i].to_x;
     player.to_room.y = connects[current_quad][player.level][i].to_y;
     player.to_room.quad = connects[current_quad][player.level][i].to_qd;
-    player.move_ticks_start = SDL_GetTicks();
+    player.move_ticks_start = MAX(1, SDL_GetTicks());
     if (follow_player)
         player.traversing = TRAVERSE_FOLLOW;
     else
         player.traversing = TRAVERSE_CENTER;
-    rotation_start = SDL_GetTicks();
+    rotation_start = MAX(1, SDL_GetTicks());
     SearchMaze(&player.to_room);
 }
 
@@ -992,7 +1169,8 @@ int PlayerOnExit( SfcMazeRoom_t *exit )
 void Quit( int code )
 {
     int level = 0,
-        quad = 0;
+        quad = 0,
+        i = 0;
 
     for (level = 0; level < total_num_levels; ++level)
     {
@@ -1029,6 +1207,9 @@ void Quit( int code )
     SDL_FreeSurface(exit_final_sfc);
     SDL_FreeSurface(fade_sfc);
     SDL_FreeSurface(prev_sfc);
+    for (i = 0; i < NUM_BUTTONS; ++i)
+        SDL_FreeSurface(button_sfcs[i]);
+    SDL_FreeSurface(maze_sfc);
     if (exit_up_rooms)
         free(exit_up_rooms);
     if (exit_dn_rooms)

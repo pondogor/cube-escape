@@ -29,6 +29,7 @@
 
 void SetPixel_32( SDL_Surface *sfc, int x, int y, Uint32 c );
 Uint32 GetPixel_32( SDL_Surface *sfc, int x, int y );
+void SetPixel_8( SDL_Surface *sfc, int x, int y, Uint8 c );
 Uint8 GetPixel_8( SDL_Surface *sfc, int x, int y );
 void DrawLine_32( SDL_Surface *sfc, int x1, int y1, int x2, int y2, Uint32 c );
 void DrawFilledGradientCircle( SDL_Surface *sfc, int diam,

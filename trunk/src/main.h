@@ -18,6 +18,9 @@
 #ifndef MAIN_HDR
 #define MAIN_HDR
 
+#include "SDL.h"
+#include "SDL_ttf.h"
+
 #include "types.h"
 #include "states.h"
 #include "draw.h"
@@ -36,10 +39,13 @@
 #define OPTION_TEXT_DIST_MULT  1.5
 #define TARGET_FPS  40
 
-#define FONT_NAME  "data/LiberationMono-Regular.ttf"
+#define DATA_DIR  "data/"
+#define FONT_NAME  DATA_DIR "LiberationMono-Regular.ttf"
 
 #define SPRITE_SIZE  64
-#define PLAYER_MOVE_TIME  200
+#define NUM_BUTTONS  8
+#define PLAYER_KEY_MOVE_TIME  200
+#define PLAYER_MOUSE_MOVE_TIME  60
 
 #define MAX_PSG_LENGTH  12
 #define NUM_POINTS  8
@@ -56,35 +62,65 @@
 
 #define ROOM_COLOR  black
 #define WALL_COLOR  white
-#define HIDE_COLOR  dk_grey
-#define MIN_EXIT_SHADE  63
-#define UNHIDE_COLOR  0x00000000
+#define HIDE_COLOR  (dk_grey | alpha_mask)
+#define UNHIDE_COLOR  black
 #define UNHIDE_TIME  500
 #define LEVEL_CHANGE_TIME  500
 
 #define DEFAULT_EXIT_DISTANCE_CHOICE  2
 #define DEFAULT_NUM_LEVELS  6
 #define DEFAULT_START_LEVEL  2
-#define DEFAULT_GRAPHICS_CHOICE 0
+#define DEFAULT_GRAPHICS_CHOICE  0
+#define DEFAULT_SHOW_BUTTONS  0
 
 #define MIN( x, y )  ((x) < (y) ? (x) : (y))
 #define MAX( x, y )  ((x) > (y) ? (x) : (y))
 
 #define LEVEL_SIZE( level )  ((level) > 0 ? (level) * 4 - 1 : 1)
 
+#define CENTER_X_SCREEN( x )  (SCREEN_W / 2 - (x) / 2)
+#define CENTER_Y_SCREEN( y )  (SCREEN_H / 2 - (y) / 2)
+
 
 /* Globals section */
 
 SDL_Surface *Screen,
+            *maze_sfc,
             *fade_sfc,
             *prev_sfc,
             *player_sfc,
+            *descend_txt_sfc,
+            *ascend_txt_sfc,
+            *exit_txt_sfc,
             *exit_up_sfc,
             *exit_dn_sfc,
             *exit_final_sfc,
+            *button_sfcs[NUM_BUTTONS],
             **quid_sfcs,
             **quad_sfcs[NUM_QUADS],
             **hide_sfcs[NUM_QUADS];
+
+SDL_Rect button_rects[NUM_BUTTONS],
+         descend_rect,
+         ascend_rect,
+         exit_rect;
+
+Uint32 white,
+       grey,
+       dk_grey,
+       black,
+       red,
+       green,
+       blue,
+       med_red,
+       med_green,
+       med_blue,
+       dk_red,
+       dk_green,
+       dk_blue,
+       faded_blue,
+       ckey,
+       alpha_mask;
 
 SDL_Color exit_up_pal[SPRITE_SIZE],
           exit_dn_pal[SPRITE_SIZE],
@@ -92,10 +128,12 @@ SDL_Color exit_up_pal[SPRITE_SIZE],
           exit_up_pal_cpy[SPRITE_SIZE],
           exit_dn_pal_cpy[SPRITE_SIZE],
           exit_final_pal_cpy[SPRITE_SIZE],
-          def_text_fg,
-          def_text_bg,
-          hi_bg,
-          no_hi_bg;
+          white_c,
+          grey_c,
+          dk_grey_c,
+          black_c,
+          green_c,
+          mouse_c;
 
 Player_t player;
 
@@ -124,22 +162,10 @@ int maze_size,
     show_full_map,
     follow_player,
     playing,
-    fast_graphics;
-
-Uint32 white,
-       grey,
-       dk_grey,
-       black,
-       red,
-       green,
-       blue,
-       med_red,
-       med_green,
-       med_blue,
-       dk_red,
-       dk_green,
-       dk_blue,
-       faded_blue;
+    fast_graphics,
+    redraw_maze,
+    move_by_mouse,
+    show_ctrl_buttons;
 
 Sint16 quads[6][4];
 
@@ -182,16 +208,19 @@ SDL_Surface *NewSurface( int flags, SDL_PixelFormat *fmt,
                          Uint32 w, Uint32 h );
 SDL_Surface *NewAlphaSurface( int flags, SDL_PixelFormat *fmt,
                               Uint32 w, Uint32 h );
+SDL_Surface *CreateShadowedText( TTF_Font *fnt, const char *str, SDL_Color c );
+SDL_Surface *CreateNewButton( int w, int h, const char *icon_name );
 void RotatePoints( float *orig_dim1, float *orig_dim2,
                    float *copy_dim1, float *copy_dim2,
                    float center_dim1, float center_dim2, float angle_delta,
                    int rotate_original );
 int RotateCube( int traversing );
 void RotatePalette( SDL_Surface *sfc, SDL_Color *palette, SDL_Color *copy,
-                    int size, int io, Uint32 ticks );
+                    int size, Uint32 ticks );
 void SetUnhideTicks( int quad, int x, int y, Uint32 ticks );
 void SearchMaze( SfcMazeRoom_t *from );
-void MovePlayer( int dir );
+void MovePlayerByMouse( void );
+void MovePlayerByKey( int dir );
 int PlayerOnExit( SfcMazeRoom_t *exit );
 void Quit( int code );
 

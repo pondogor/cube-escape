@@ -42,6 +42,15 @@ Uint32 GetPixel_32( SDL_Surface *sfc, int x, int y )
 }
 
 
+void SetPixel_8( SDL_Surface *sfc, int x, int y, Uint8 c )
+{
+    if (x < 0 || x >= sfc->w || y < 0 || y >= sfc->h)
+        return;
+
+    ((Uint8 *)sfc->pixels)[x + y * sfc->w] = c;
+}
+
+
 Uint8 GetPixel_8( SDL_Surface *sfc, int x, int y )
 {
     if (x < 0 || x >= sfc->w || y < 0 || y >= sfc->h)
@@ -308,16 +317,36 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
         zoom = player_zoom;
         x_distance = (2.0f * zoom) / (center.z - 1.0f) / m_size;
         y_distance = (2.0f * zoom) / (center.z - 1.0f) / m_size;
-        x1 = player.room.x;
-        x2 = player.move_x;
-        y1 = player.room.y;
-        y2 = player.move_y;
-        if (player.traversing == TRAVERSE_FOLLOW && rotating == ROTATE_NONE)
+        if (fast_graphics)
+        {
+            if ( player.traversing == TRAVERSE_FOLLOW &&
+                 rotating == ROTATE_NONE )
+            {
+                x1 = player.to_room.x;
+                y1 = player.to_room.y;
+            }
+            else
+            {
+                x1 = player.room.x;
+                y1 = player.room.y;
+            }
+            x2 = 0;
+            y2 = 0;
+        }
+        else if ( player.traversing == TRAVERSE_FOLLOW &&
+                  rotating == ROTATE_NONE )
         {
             x1 = player.to_room.x;
-            x2 = player.move_x_opp;
             y1 = player.to_room.y;
+            x2 = player.move_x_opp;
             y2 = player.move_y_opp;
+        }
+        else
+        {
+            x1 = player.room.x;
+            y1 = player.room.y;
+            x2 = player.move_x;
+            y2 = player.move_y;
         }
         switch (player.orient)
         {
@@ -447,17 +476,17 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
     }
 
     /* Adjust player sprite if moving. */
-    if (player.x_dir != 0)
+    if (!fast_graphics && player.x_dir != 0)
     {
         player.move_x =
-            SPRITE_SIZE * ticks / PLAYER_MOVE_TIME;
+            SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME;
         if (player.move_x > SPRITE_SIZE)
             player.move_x = SPRITE_SIZE;
         player.move_x *= player.x_dir;
         if (player.traversing == NOT_TRAVERSING)
         {
             player.move_x_opp =
-                SPRITE_SIZE * ticks / PLAYER_MOVE_TIME - SPRITE_SIZE;
+                SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE;
             if (player.move_x_opp > 0)
                 player.move_x_opp = 0;
             player.move_x_opp *= player.x_dir;
@@ -465,29 +494,29 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
         else if (player.to_room.y == 0)
         {
             player.move_y_opp =
-                (SPRITE_SIZE * ticks / PLAYER_MOVE_TIME - SPRITE_SIZE) * +1;
+                +(SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE);
             if (player.move_y_opp > 0)
                 player.move_y_opp = 0;
         }
         else
         {
             player.move_y_opp =
-                (SPRITE_SIZE * ticks / PLAYER_MOVE_TIME - SPRITE_SIZE) * -1;
+                -(SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE);
             if (player.move_y_opp < 0)
                 player.move_y_opp = 0;
         }
     }
-    else if (player.y_dir != 0)
+    else if (!fast_graphics && player.y_dir != 0)
     {
         player.move_y =
-            SPRITE_SIZE * ticks / PLAYER_MOVE_TIME;
+            SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME;
         if (player.move_y > SPRITE_SIZE)
             player.move_y = SPRITE_SIZE;
         player.move_y *= player.y_dir;
         if (player.traversing == NOT_TRAVERSING)
         {
             player.move_y_opp =
-                SPRITE_SIZE * ticks / PLAYER_MOVE_TIME - SPRITE_SIZE;
+                SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE;
             if (player.move_y_opp > 0)
                 player.move_y_opp = 0;
             player.move_y_opp *= player.y_dir;
@@ -495,14 +524,14 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
         else if (player.to_room.x == 0)
         {
             player.move_x_opp =
-                (SPRITE_SIZE * ticks / PLAYER_MOVE_TIME - SPRITE_SIZE) * +1;
+                +(SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE);
             if (player.move_x_opp > 0)
                 player.move_x_opp = 0;
         }
         else
         {
             player.move_x_opp =
-                (SPRITE_SIZE * ticks / PLAYER_MOVE_TIME - SPRITE_SIZE) * -1;
+                -(SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE);
             if (player.move_x_opp < 0)
                 player.move_x_opp = 0;
         }
@@ -730,7 +759,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                         }
                     }
                 }
-                if ( player.move_ticks_start > 0 &&
+                if ( !fast_graphics && player.move_ticks_start > 0 &&
                      n_quad == player.to_room.quad )
                 {
                     if (qe1->scr_x == qe2->scr_x)

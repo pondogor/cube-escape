@@ -52,9 +52,15 @@ enum
 
 enum
 {
-    INWARD,
-    OUTWARD
-} IO;
+    BUTTON_UP = 0,
+    BUTTON_DOWN,
+    BUTTON_LEFT,
+    BUTTON_RIGHT,
+    BUTTON_CWISE,
+    BUTTON_CCWISE,
+    BUTTON_ZOOM_IN,
+    BUTTON_ZOOM_OUT
+} ButtonActions;
 
 typedef struct
 {
