@@ -42,7 +42,7 @@ int CreateSurfaceMaze( int size, int level, int max_psg_count )
         finished = 0,
         n_opens = 0,
         choice = 0,
-        hf_sz = 0,
+        half_sz = 0,
         quad = 0,
         off = 0,
         dir = 0,
@@ -54,62 +54,62 @@ int CreateSurfaceMaze( int size, int level, int max_psg_count )
         y = 0;
     SfcMazeRoom_t *room_stack;
 
-    hf_sz = size / 2;
-    tot_num_rooms = hf_sz * hf_sz * NUM_QUADS;
+    half_sz = size / 2;
+    tot_num_rooms = half_sz * half_sz * NUM_QUADS;
     room_stack = (SfcMazeRoom_t *)
         malloc(sizeof(SfcMazeRoom_t) * tot_num_rooms);
 
     for (quad = 0; quad < NUM_QUADS; ++quad)
     {
-        for (i = 0, off = 1; i < hf_sz; ++i, off += 2)
+        for (i = 0, off = 1; i < half_sz; ++i, off += 2)
         {
-            connects[quad][level][i + hf_sz * 0].fr_x = off;
-            connects[quad][level][i + hf_sz * 0].fr_y = 0;
-            connects[quad][level][i + hf_sz * 0].to_qd =
+            connects[quad][level][i + half_sz * 0].fr_x = off;
+            connects[quad][level][i + half_sz * 0].fr_y = 0;
+            connects[quad][level][i + half_sz * 0].to_qd =
                 to_quad_array[quad][0];
 
-            connects[quad][level][i + hf_sz * 1].fr_x = size - 1;
-            connects[quad][level][i + hf_sz * 1].fr_y = off;
-            connects[quad][level][i + hf_sz * 1].to_qd =
+            connects[quad][level][i + half_sz * 1].fr_x = size - 1;
+            connects[quad][level][i + half_sz * 1].fr_y = off;
+            connects[quad][level][i + half_sz * 1].to_qd =
                 to_quad_array[quad][1];
 
-            connects[quad][level][i + hf_sz * 2].fr_x = size - off - 1;
-            connects[quad][level][i + hf_sz * 2].fr_y = size - 1;
-            connects[quad][level][i + hf_sz * 2].to_qd =
+            connects[quad][level][i + half_sz * 2].fr_x = size - off - 1;
+            connects[quad][level][i + half_sz * 2].fr_y = size - 1;
+            connects[quad][level][i + half_sz * 2].to_qd =
                 to_quad_array[quad][2];
 
-            connects[quad][level][i + hf_sz * 3].fr_x = 0;
-            connects[quad][level][i + hf_sz * 3].fr_y = size - off - 1;
-            connects[quad][level][i + hf_sz * 3].to_qd =
+            connects[quad][level][i + half_sz * 3].fr_x = 0;
+            connects[quad][level][i + half_sz * 3].fr_y = size - off - 1;
+            connects[quad][level][i + half_sz * 3].to_qd =
                 to_quad_array[quad][3];
 
             if (quad % 2 == 0)
             {
-                connects[quad][level][i + hf_sz * 0].to_x = size - 1;
-                connects[quad][level][i + hf_sz * 0].to_y = size - off - 1;
+                connects[quad][level][i + half_sz * 0].to_x = size - 1;
+                connects[quad][level][i + half_sz * 0].to_y = size - off - 1;
 
-                connects[quad][level][i + hf_sz * 1].to_x = size - off - 1;
-                connects[quad][level][i + hf_sz * 1].to_y = 0;
+                connects[quad][level][i + half_sz * 1].to_x = size - off - 1;
+                connects[quad][level][i + half_sz * 1].to_y = 0;
 
-                connects[quad][level][i + hf_sz * 2].to_x = size - 1;
-                connects[quad][level][i + hf_sz * 2].to_y = size - off - 1;
+                connects[quad][level][i + half_sz * 2].to_x = size - 1;
+                connects[quad][level][i + half_sz * 2].to_y = size - off - 1;
 
-                connects[quad][level][i + hf_sz * 3].to_x = off;
-                connects[quad][level][i + hf_sz * 3].to_y = size - 1;
+                connects[quad][level][i + half_sz * 3].to_x = off;
+                connects[quad][level][i + half_sz * 3].to_y = size - 1;
             }
             else
             {
-                connects[quad][level][i + hf_sz * 0].to_x = 0;
-                connects[quad][level][i + hf_sz * 0].to_y = off;
+                connects[quad][level][i + half_sz * 0].to_x = 0;
+                connects[quad][level][i + half_sz * 0].to_y = off;
 
-                connects[quad][level][i + hf_sz * 1].to_x = off;
-                connects[quad][level][i + hf_sz * 1].to_y = size - 1;
+                connects[quad][level][i + half_sz * 1].to_x = off;
+                connects[quad][level][i + half_sz * 1].to_y = size - 1;
 
-                connects[quad][level][i + hf_sz * 2].to_x = 0;
-                connects[quad][level][i + hf_sz * 2].to_y = off;
+                connects[quad][level][i + half_sz * 2].to_x = 0;
+                connects[quad][level][i + half_sz * 2].to_y = off;
 
-                connects[quad][level][i + hf_sz * 3].to_x = size - off - 1;
-                connects[quad][level][i + hf_sz * 3].to_y = 0;
+                connects[quad][level][i + half_sz * 3].to_x = size - off - 1;
+                connects[quad][level][i + half_sz * 3].to_y = 0;
             }
         }
 
@@ -117,8 +117,8 @@ int CreateSurfaceMaze( int size, int level, int max_psg_count )
     }
 
     quad = rand() % NUM_QUADS;
-    cx = rand() % hf_sz * 2 + 1;
-    cy = rand() % hf_sz * 2 + 1;
+    cx = rand() % half_sz * 2 + 1;
+    cy = rand() % half_sz * 2 + 1;
     room_stack[0].x = cx;
     room_stack[0].y = cy;
     room_stack[0].quad = quad;
@@ -149,7 +149,7 @@ int CreateSurfaceMaze( int size, int level, int max_psg_count )
 
             if (cx == 1)
             {
-                for (i = hf_sz * 3; i < hf_sz * 4; ++i)
+                for (i = half_sz * 3; i < half_sz * 4; ++i)
                 {
                     con[0] = &connects[quad][level][i];
                     if (con[0]->fr_x + 1 == cx && con[0]->fr_y == cy)
@@ -167,7 +167,7 @@ int CreateSurfaceMaze( int size, int level, int max_psg_count )
             }
             if (cx == size - 2)
             {
-                for (i = hf_sz; i < hf_sz * 2; ++i)
+                for (i = half_sz; i < half_sz * 2; ++i)
                 {
                     con[1] = &connects[quad][level][i];
                     if (con[1]->fr_x - 1 == cx && con[1]->fr_y == cy)
@@ -185,7 +185,7 @@ int CreateSurfaceMaze( int size, int level, int max_psg_count )
             }
             if (cy == 1)
             {
-                for (i = 0; i < hf_sz; ++i)
+                for (i = 0; i < half_sz; ++i)
                 {
                     con[2] = &connects[quad][level][i];
                     if (con[2]->fr_x == cx && con[2]->fr_y + 1 == cy)
@@ -203,7 +203,7 @@ int CreateSurfaceMaze( int size, int level, int max_psg_count )
             }
             if (cy == size - 2)
             {
-                for (i = hf_sz * 2; i < hf_sz * 3; ++i)
+                for (i = half_sz * 2; i < half_sz * 3; ++i)
                 {
                     con[3] = &connects[quad][level][i];
                     if (con[3]->fr_x == cx && con[3]->fr_y - 1 == cy)
@@ -406,7 +406,7 @@ int RecurseTowardsExit( int level, SfcMazeRoom_t *room, int from_dir,
     SfcMazeRoom_t next_room = { 0 };
     int open[4] = { 0 },
         n_opens = 0,
-        hf_sz = 0,
+        half_sz = 0,
         dist = 0,
         temp = 0,
         i = 0,
@@ -415,7 +415,7 @@ int RecurseTowardsExit( int level, SfcMazeRoom_t *room, int from_dir,
         x = room->x,
         y = room->y;
 
-    hf_sz = cur_sfc->w / 2;
+    half_sz = cur_sfc->w / 2;
     if (place_exit && distance == good_exit_distance)
     {
         exit_up_rooms[level].x = x;
@@ -445,7 +445,7 @@ int RecurseTowardsExit( int level, SfcMazeRoom_t *room, int from_dir,
     if ( from_dir != LEFT && x == 1 &&
          GetPixel_32(cur_sfc, x - 1, y) == ROOM_COLOR )
     {
-        for (i = hf_sz * 3; i < hf_sz * 4; ++i)
+        for (i = half_sz * 3; i < half_sz * 4; ++i)
         {
             con[0] = &connects[quad][level][i];
             if (con[0]->fr_x + 1 == x && con[0]->fr_y == y)
@@ -456,7 +456,7 @@ int RecurseTowardsExit( int level, SfcMazeRoom_t *room, int from_dir,
     if ( from_dir != RIGHT && x == cur_sfc->w - 2 &&
          GetPixel_32(cur_sfc, x + 1, y) == ROOM_COLOR )
     {
-        for (i = hf_sz; i < hf_sz * 2; ++i)
+        for (i = half_sz; i < half_sz * 2; ++i)
         {
             con[1] = &connects[quad][level][i];
             if (con[1]->fr_x - 1 == x && con[1]->fr_y == y)
@@ -467,7 +467,7 @@ int RecurseTowardsExit( int level, SfcMazeRoom_t *room, int from_dir,
     if ( from_dir != UP && y == 1 &&
          GetPixel_32(cur_sfc, x, y - 1) == ROOM_COLOR )
     {
-        for (i = 0; i < hf_sz; ++i)
+        for (i = 0; i < half_sz; ++i)
         {
             con[2] = &connects[quad][level][i];
             if (con[2]->fr_x == x && con[2]->fr_y + 1 == y)
@@ -478,7 +478,7 @@ int RecurseTowardsExit( int level, SfcMazeRoom_t *room, int from_dir,
     if ( from_dir != DOWN && y == cur_sfc->h - 2 &&
          GetPixel_32(cur_sfc, x, y + 1) == ROOM_COLOR )
     {
-        for (i = hf_sz * 2; i < hf_sz * 3; ++i)
+        for (i = half_sz * 2; i < half_sz * 3; ++i)
         {
             con[3] = &connects[quad][level][i];
             if (con[3]->fr_x == x && con[3]->fr_y - 1 == y)

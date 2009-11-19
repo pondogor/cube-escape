@@ -58,23 +58,23 @@ int IntroScreen()
     opt_fnt = TTF_OpenFont(FONT_NAME, 32);
 
     title_txt = TTF_RenderText_Shaded( hdr_fnt, TITLE,
-                                       def_text_fg, def_text_bg );
+                                       white_c, black_c );
     new_txt = TTF_RenderText_Shaded( opt_fnt, "New Game",
-                                     def_text_fg, def_text_bg );
+                                     white_c, black_c );
     new_dark_txt =
-        TTF_RenderText_Shaded(opt_fnt, "New Game", med_grey_fg, def_text_bg);
+        TTF_RenderText_Shaded(opt_fnt, "New Game", med_grey_fg, black_c);
     quit_txt =
-        TTF_RenderText_Shaded(opt_fnt, "Quit", def_text_fg, def_text_bg);
+        TTF_RenderText_Shaded(opt_fnt, "Quit", white_c, black_c);
     quit_dark_txt =
-        TTF_RenderText_Shaded(opt_fnt, "Quit", med_grey_fg, def_text_bg);
+        TTF_RenderText_Shaded(opt_fnt, "Quit", med_grey_fg, black_c);
     resume_txt =
         TTF_RenderText_Shaded( opt_fnt, "Resume Game",
-                               playing ? def_text_fg : dk_grey_fg,
-                               def_text_bg );
+                               playing ? white_c : dk_grey_fg,
+                               black_c );
     resume_dark_txt =
         TTF_RenderText_Shaded( opt_fnt, "Resume Game",
                                playing ? med_grey_fg : dk_grey_fg,
-                               def_text_bg );
+                               black_c );
 
     txt_ch_h = TTF_FontHeight(opt_fnt);
 
@@ -83,28 +83,28 @@ int IntroScreen()
         SDL_GetMouseState(&m_x, &m_y);
 
         SDL_FillRect(Screen, NULL, black);
-        dst_rect.x = SCREEN_W / 2 - title_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(title_txt->w);
         dst_rect.y = title_txt->h;
         SDL_BlitSurface(title_txt, NULL, Screen, &dst_rect);
 
-        dst_rect.x = SCREEN_W / 2 - resume_dark_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(resume_dark_txt->w);
         dst_rect.y = SCREEN_H / 3 - txt_ch_h / 2;
         if ( playing &&
              m_x >= dst_rect.x && m_x < dst_rect.x + resume_txt->w &&
              m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
-            SDL_SetColors(resume_dark_txt, &hi_bg, 0, 1);
-            SDL_SetColors(resume_txt, &hi_bg, 0, 1);
+            SDL_SetColors(resume_dark_txt, &mouse_c, 0, 1);
+            SDL_SetColors(resume_txt, &mouse_c, 0, 1);
             if (m_b)
             {
-                NextState = GameLoop;
+                NextState = GamePlay;
                 finished = 1;
             }
         }
         else
         {
-            SDL_SetColors(resume_dark_txt, &no_hi_bg, 0, 1);
-            SDL_SetColors(resume_txt, &no_hi_bg, 0, 1);
+            SDL_SetColors(resume_dark_txt, &black_c, 0, 1);
+            SDL_SetColors(resume_txt, &black_c, 0, 1);
         }
         if (choice != 0)
         {
@@ -118,13 +118,13 @@ int IntroScreen()
             SDL_BlitSurface(resume_txt, NULL, Screen, &dst_rect);
         }
 
-        dst_rect.x = SCREEN_W / 2 - new_dark_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(new_dark_txt->w);
         dst_rect.y += OPTION_TEXT_DIST_MULT * txt_ch_h;
         if ( m_x >= dst_rect.x && m_x < dst_rect.x + new_txt->w &&
              m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
-            SDL_SetColors(new_dark_txt, &hi_bg, 0, 1);
-            SDL_SetColors(new_txt, &hi_bg, 0, 1);
+            SDL_SetColors(new_dark_txt, &mouse_c, 0, 1);
+            SDL_SetColors(new_txt, &mouse_c, 0, 1);
             if (m_b)
             {
                 if (playing)
@@ -144,8 +144,8 @@ int IntroScreen()
         }
         else
         {
-            SDL_SetColors(new_dark_txt, &no_hi_bg, 0, 1);
-            SDL_SetColors(new_txt, &no_hi_bg, 0, 1);
+            SDL_SetColors(new_dark_txt, &black_c, 0, 1);
+            SDL_SetColors(new_txt, &black_c, 0, 1);
         }
         if (choice != 1)
         {
@@ -159,13 +159,13 @@ int IntroScreen()
             SDL_BlitSurface(new_txt, NULL, Screen, &dst_rect);
         }
 
-        dst_rect.x = SCREEN_W / 2 - quit_dark_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(quit_dark_txt->w);
         dst_rect.y += OPTION_TEXT_DIST_MULT * txt_ch_h;
         if ( m_x >= dst_rect.x && m_x < dst_rect.x + quit_txt->w &&
              m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
-            SDL_SetColors(quit_dark_txt, &hi_bg, 0, 1);
-            SDL_SetColors(quit_txt, &hi_bg, 0, 1);
+            SDL_SetColors(quit_dark_txt, &mouse_c, 0, 1);
+            SDL_SetColors(quit_txt, &mouse_c, 0, 1);
             if (m_b)
             {
                 NextState = ConfirmMessage;
@@ -177,8 +177,8 @@ int IntroScreen()
         }
         else
         {
-            SDL_SetColors(quit_dark_txt, &no_hi_bg, 0, 1);
-            SDL_SetColors(quit_txt, &no_hi_bg, 0, 1);
+            SDL_SetColors(quit_dark_txt, &black_c, 0, 1);
+            SDL_SetColors(quit_txt, &black_c, 0, 1);
         }
         if (choice != 2)
         {
@@ -209,7 +209,7 @@ int IntroScreen()
                     switch (evt.key.keysym.sym)
                     {
                         case SDLK_r:
-                            NextState = GameLoop;
+                            NextState = GamePlay;
                             finished = 1;
                             break;
 
@@ -245,7 +245,7 @@ int IntroScreen()
                         case SDLK_ESCAPE:
                             if (playing)
                             {
-                                NextState = GameLoop;
+                                NextState = GamePlay;
                                 finished = 1;
                             }
                             else
@@ -274,7 +274,7 @@ int IntroScreen()
                         case SDLK_RETURN:
                             if (choice == 0)
                             {
-                                NextState = GameLoop;
+                                NextState = GamePlay;
                                 finished = 1;
                             }
                             else if (choice == 1)
@@ -367,6 +367,8 @@ int OptionsScreen()
                 *start_txt = NULL,
                 *start_choice_txt = NULL,
                 *graphics_prompt_txt = NULL,
+                *ok_txt = NULL,
+                *cancel_txt = NULL,
                 *prompt_a_txt = NULL,
                 *prompt_b_txt = NULL,
                 *adjust_txt = NULL;
@@ -400,51 +402,53 @@ int OptionsScreen()
     hdr_fnt = TTF_OpenFont(FONT_NAME, 40);
     opt_fnt = TTF_OpenFont(FONT_NAME, 20);
 
-    title_txt = TTF_RenderText_Shaded(hdr_fnt, "Options", def_text_fg, def_text_bg);
+    title_txt = TTF_RenderText_Shaded(hdr_fnt, "Options", white_c, black_c);
     help_txt = TTF_RenderText_Shaded( opt_fnt,
                                        "Use arrow keys or mouse to adjust",
-                                       def_text_fg, def_text_bg );
+                                       white_c, black_c );
     dist_prompt_txt = TTF_RenderText_Shaded( opt_fnt, "Exit distance:",
-                                             def_text_fg, def_text_bg);
+                                             white_c, black_c);
     for (i = 0; i < num_dist_choices; ++i)
         dist_txts[i] = TTF_RenderText_Shaded( opt_fnt, dist_strs[i],
-                                              option_fg, def_text_bg );
+                                              option_fg, black_c );
     level_prompt_txt = TTF_RenderText_Shaded( opt_fnt, "Number of levels:",
-                                              def_text_fg, def_text_bg );
+                                              white_c, black_c );
     level_choice_txt = TTF_RenderText_Shaded( opt_fnt, "0123456789",
-                                              option_fg, def_text_bg );
+                                              option_fg, black_c );
     start_prompt_txt = TTF_RenderText_Shaded( opt_fnt, "Starting level:",
-                                              def_text_fg, def_text_bg );
+                                              white_c, black_c );
     start_choice_txt = TTF_RenderText_Shaded( opt_fnt, "0123456789",
-                                              option_fg, def_text_bg );
+                                              option_fg, black_c );
     graphics_prompt_txt = TTF_RenderText_Shaded( opt_fnt, "Advanced graphics:",
-                                                 def_text_fg, def_text_bg );
+                                                 white_c, black_c );
     for (i = 0; i < num_graphics; ++i)
         graphic_txts[i] = TTF_RenderText_Shaded( opt_fnt, graphic_strs[i],
-                                                 option_fg, def_text_bg );
+                                                 option_fg, black_c );
+    ok_txt = TTF_RenderText_Shaded(opt_fnt, "OK", white_c, black_c);
+    cancel_txt = TTF_RenderText_Shaded( opt_fnt, "Cancel",
+                                        white_c, black_c );
     prompt_a_txt = TTF_RenderText_Shaded( opt_fnt,
                                           "Press Enter key to accept values",
-                                          def_text_fg, def_text_bg );
+                                          white_c, black_c );
     prompt_b_txt = TTF_RenderText_Shaded( opt_fnt,
-                                          "Escape cancels back to "
-                                          "previous screen",
-                                          def_text_fg, def_text_bg );
+                                          "Escape cancels to previous screen",
+                                          white_c, black_c );
 
     TTF_SizeText(opt_fnt, "0", &txt_ch_w, &txt_ch_h);
 
     sprintf(level_str, "%d", num_levels);
-    level_txt = NewSurface( SDL_SWSURFACE, Screen->format,
+    level_txt = NewSurface( SCREEN_FLAGS, Screen->format,
                             txt_ch_w * (sizeof(level_str) - 1), txt_ch_h );
     UpdateNumberText( level_str, level_txt, level_choice_txt,
                       txt_ch_w, txt_ch_h );
     sprintf(start_str, "%d", start);
-    start_txt = NewSurface( SDL_SWSURFACE, Screen->format,
+    start_txt = NewSurface( SCREEN_FLAGS, Screen->format,
                             txt_ch_w * (sizeof(start_str) - 1), txt_ch_h );
     UpdateNumberText( start_str, start_txt, start_choice_txt,
                       txt_ch_w, txt_ch_h );
 
     adjust_txt = TTF_RenderText_Shaded( opt_fnt, "<>",
-                                        def_text_fg, def_text_bg );
+                                        white_c, black_c );
 
     while (!finished)
     {
@@ -452,11 +456,11 @@ int OptionsScreen()
 
         SDL_FillRect(Screen, NULL, black);
 
-        dst_rect.x = SCREEN_W / 2 - title_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(title_txt->w);
         dst_rect.y = title_txt->h;
         SDL_BlitSurface(title_txt, NULL, Screen, &dst_rect);
 
-        dst_rect.x = SCREEN_W / 2 - help_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(help_txt->w);
         dst_rect.y = SCREEN_H / 3 - txt_ch_h;
         SDL_BlitSurface(help_txt, NULL, Screen, &dst_rect);
 
@@ -474,14 +478,14 @@ int OptionsScreen()
              m_x < dst_rect.x + dist_txts[chosen_dist]->w &&
              m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
-            if (m_b & 1 && chosen_dist < num_dist_choices - 1)
+            if ((m_b & 1 || m_b & 2) && chosen_dist < num_dist_choices - 1)
                 chosen_dist++;
-            if (m_b & 2 && chosen_dist > 0)
+            if ((m_b & 4 || m_b & 8) && chosen_dist > 0)
                 chosen_dist--;
-            SDL_SetColors(dist_txts[chosen_dist], &hi_bg, 0, 1);
+            SDL_SetColors(dist_txts[chosen_dist], &mouse_c, 0, 1);
         }
         else
-            SDL_SetColors(dist_txts[chosen_dist], &no_hi_bg, 0, 1);
+            SDL_SetColors(dist_txts[chosen_dist], &black_c, 0, 1);
         SDL_BlitSurface(dist_txts[chosen_dist], NULL, Screen, &dst_rect);
 
         dst_rect.x = SCREEN_W / 2 - level_prompt_txt->w;
@@ -498,13 +502,12 @@ int OptionsScreen()
              m_x < dst_rect.x + txt_ch_w * strlen(level_str) &&
              m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
-            SDL_SetColors(level_choice_txt, &hi_bg, 0, 1);
-            if (m_b & 1)
+            if (m_b & 1 || m_b & 2)
             {
                 num_levels++;
                 sprintf(level_str, "%d", num_levels);
             }
-            if ((m_b & 2) && num_levels > 2)
+            if ((m_b & 4 || m_b & 8) && num_levels > 2)
             {
                 num_levels--;
                 sprintf(level_str, "%d", num_levels);
@@ -514,9 +517,10 @@ int OptionsScreen()
                     sprintf(start_str, "%d", start);
                 }
             }
+            SDL_SetColors(level_choice_txt, &mouse_c, 0, 1);
         }
         else
-            SDL_SetColors(level_choice_txt, &no_hi_bg, 0, 1);
+            SDL_SetColors(level_choice_txt, &black_c, 0, 1);
         UpdateNumberText( level_str, level_txt, level_choice_txt,
                           txt_ch_w, txt_ch_h );
         SDL_BlitSurface(level_txt, NULL, Screen, &dst_rect);
@@ -535,20 +539,20 @@ int OptionsScreen()
              m_x < dst_rect.x + txt_ch_w * strlen(start_str) &&
              m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
-            SDL_SetColors(start_choice_txt, &hi_bg, 0, 1);
-            if ((m_b & 1) && start < num_levels)
+            if ((m_b & 1 || m_b & 2) && start < num_levels)
             {
                 start++;
                 sprintf(start_str, "%d", start);
             }
-            if ((m_b & 2) && start > 1)
+            if ((m_b & 4 || m_b & 8) && start > 1)
             {
                 start--;
                 sprintf(start_str, "%d", start);
             }
+            SDL_SetColors(start_choice_txt, &mouse_c, 0, 1);
         }
         else
-            SDL_SetColors(start_choice_txt, &no_hi_bg, 0, 1);
+            SDL_SetColors(start_choice_txt, &black_c, 0, 1);
         UpdateNumberText( start_str, start_txt, start_choice_txt,
                           txt_ch_w, txt_ch_h );
         SDL_BlitSurface(start_txt, NULL, Screen, &dst_rect);
@@ -567,21 +571,57 @@ int OptionsScreen()
              m_x < dst_rect.x + graphic_txts[graphics]->w &&
              m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
         {
-            if (m_b & 1)
+            if (m_b & 1 || m_b & 2)
                 graphics = (graphics + 1) % num_graphics;
-            if (m_b & 2)
+            if (m_b & 4 || m_b & 8)
                 graphics = (graphics + num_graphics - 1) % num_graphics;
-            SDL_SetColors(graphic_txts[graphics], &hi_bg, 0, 1);
+            SDL_SetColors(graphic_txts[graphics], &mouse_c, 0, 1);
         }
         else
-            SDL_SetColors(graphic_txts[graphics], &no_hi_bg, 0, 1);
+            SDL_SetColors(graphic_txts[graphics], &black_c, 0, 1);
         SDL_BlitSurface(graphic_txts[graphics], NULL, Screen, &dst_rect);
 
-        dst_rect.x = SCREEN_W / 2 - prompt_a_txt->w / 2;
+        dst_rect.x = SCREEN_W / 3 - ok_txt->w / 2;
+        dst_rect.y += txt_ch_h * 2;
+        if ( m_x >= dst_rect.x && m_x < dst_rect.x + ok_txt->w &&
+             m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
+        {
+            if (m_b & 1)
+            {
+                exit_choice = chosen_dist;
+                exit_mult = dist_choices[exit_choice];
+                total_num_levels = num_levels;
+                start_level = start;
+                fast_graphics = graphics;
+                NextState = GamePlay;
+                StartNewMaze();
+                finished = 1;
+            }
+            SDL_SetColors(ok_txt, &mouse_c, 0, 1);
+        }
+        else
+            SDL_SetColors(ok_txt, &black_c, 0, 1);
+        SDL_BlitSurface(ok_txt, NULL, Screen, &dst_rect);
+        dst_rect.x = SCREEN_W * 2 / 3 - cancel_txt->w / 2;
+        if ( m_x >= dst_rect.x && m_x < dst_rect.x + cancel_txt->w &&
+             m_y >= dst_rect.y && m_y < dst_rect.y + txt_ch_h )
+        {
+            if (m_b & 1)
+            {
+                NextState = IntroScreen;
+                finished = 1;
+            }
+            SDL_SetColors(cancel_txt, &mouse_c, 0, 1);
+        }
+        else
+            SDL_SetColors(cancel_txt, &black_c, 0, 1);
+        SDL_BlitSurface(cancel_txt, NULL, Screen, &dst_rect);
+
+        dst_rect.x = CENTER_X_SCREEN(prompt_a_txt->w);
         dst_rect.y = SCREEN_H - prompt_a_txt->h * 2;
         SDL_BlitSurface(prompt_a_txt, NULL, Screen, &dst_rect);
 
-        dst_rect.x = SCREEN_W / 2 - prompt_b_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(prompt_b_txt->w);
         dst_rect.y = SCREEN_H - prompt_b_txt->h;
         SDL_BlitSurface(prompt_b_txt, NULL, Screen, &dst_rect);
 
@@ -613,7 +653,7 @@ int OptionsScreen()
                             total_num_levels = num_levels;
                             start_level = start;
                             fast_graphics = graphics;
-                            NextState = GameLoop;
+                            NextState = GamePlay;
                             StartNewMaze();
                             finished = 1;
                             break;
@@ -704,10 +744,14 @@ int OptionsScreen()
                     break;
 
                 case SDL_MOUSEBUTTONDOWN:
-                    if (evt.button.button == 1 || evt.button.button == 4)
+                    if (evt.button.button == 1)
                         m_b |= 1;
-                    else if (evt.button.button == 3 || evt.button.button == 5)
+                    else if (evt.button.button == 4)
                         m_b |= 2;
+                    else if (evt.button.button == 3)
+                        m_b |= 4;
+                    else if (evt.button.button == 5)
+                        m_b |= 8;
                     break;
 
             }
@@ -730,6 +774,8 @@ int OptionsScreen()
     SDL_FreeSurface(graphics_prompt_txt);
     for (i = 0; i < num_graphics; ++i)
         SDL_FreeSurface(graphic_txts[i]);
+    SDL_FreeSurface(ok_txt);
+    SDL_FreeSurface(cancel_txt);
     SDL_FreeSurface(prompt_a_txt);
     SDL_FreeSurface(prompt_b_txt);
     SDL_FreeSurface(adjust_txt);
@@ -741,29 +787,60 @@ int OptionsScreen()
 }
 
 
-int GameLoop()
+void ZoomIn()
+{
+    if (!follow_player)
+    {
+        full_zoom += FULL_ZOOM_SPEED;
+        if (full_zoom > MAX_FULL_ZOOM)
+            full_zoom = MAX_FULL_ZOOM;
+    }
+    else
+    {
+        player_zoom += player_zoom_speed;
+    }
+    redraw_maze = 1;
+}
+
+
+void ZoomOut()
+{
+    if (!follow_player)
+    {
+        full_zoom -= FULL_ZOOM_SPEED;
+        if (full_zoom < MIN_FULL_ZOOM)
+            full_zoom = MIN_FULL_ZOOM;
+    }
+    else
+    {
+        player_zoom -= player_zoom_speed;
+        if (player_zoom < MIN_FULL_ZOOM)
+            player_zoom = MIN_FULL_ZOOM;
+    }
+    redraw_maze = 1;
+}
+
+
+int GamePlay()
 {
     TTF_Font *fnt = NULL;
-    SDL_Surface *descend_txt = NULL,
-                *ascend_txt = NULL,
-                *exit_txt = NULL;
-    SDL_Color descend_fg = { 63, 63, 255 },
-              ascend_fg = { 63, 255, 63 },
-              exit_fg = { 255, 63, 63 };
-    SDL_Rect descend_rect,
-             ascend_rect,
-             exit_rect;
+    SDL_Surface *sfc = NULL;
+    SDL_Rect *rect;
     SDL_Event evt;
     const int hold_ticks = 1000 / TARGET_FPS;
     int player_move_ticks = 0,
+        mouse_b1_pressed = 0,
+        can_click_ctrl = 0,
         draw_quad = 0,
+        blit_flag = 0,
         finished = 0,
+        m_hit_x = 0,
+        m_hit_y = 0,
         quad = 0,
         m_x = 0,
         m_y = 0,
         i = 0,
-        x = 0,
-        y = 0;
+        x = 0;
     float ang1 = 0.0f,
           ang2 = 0.0f;
     Point_t *from = NULL,
@@ -775,20 +852,6 @@ int GameLoop()
           hide_b = 0,
           a = 0;
 
-    fnt = TTF_OpenFont(FONT_NAME, 24);
-    descend_txt = TTF_RenderText_Solid( fnt, "Press 'd' to descend a level",
-                                        descend_fg );
-    descend_rect.x = SCREEN_W / 2 - descend_txt->w / 2;
-    descend_rect.y = SCREEN_H - descend_txt->h;
-    ascend_txt = TTF_RenderText_Solid( fnt, "Press 'a' to ascend a level",
-                                        ascend_fg );
-    ascend_rect.x = SCREEN_W / 2 - ascend_txt->w / 2;
-    ascend_rect.y = SCREEN_H - ascend_txt->h * 2;
-    exit_txt = TTF_RenderText_Solid( fnt, "Press 'a' to exit the maze",
-                                        exit_fg );
-    exit_rect.x = SCREEN_W / 2 - exit_txt->w / 2;
-    exit_rect.y = SCREEN_H - exit_txt->h * 2;
-
     playing = 1;
 
     SDL_GetRGB(HIDE_COLOR, Screen->format, &hide_r, &hide_g, &hide_b);
@@ -799,58 +862,66 @@ int GameLoop()
         SDL_GetMouseState(&m_x, &m_y);
 
         SDL_FillRect(Screen, NULL, black);
-        for (quad = 0; quad < NUM_QUADS; ++quad)
+        if (!fast_graphics || redraw_maze)
         {
-            from = &copy_points[quads[quad][0]];
-            to = &copy_points[quads[quad][1]];
-            ang1 = atan2( to->y / to->z - from->y / from->z,
-                          to->x / to->z - from->x / from->z );
-            to = &copy_points[quads[quad][3]];
-            ang2 = atan2( to->y / to->z - from->y / from->z,
-                          to->x / to->z - from->x / from->z );
+            SDL_FillRect(maze_sfc, NULL, black);
+            for (quad = 0; quad < NUM_QUADS; ++quad)
+            {
+                from = &copy_points[quads[quad][0]];
+                to = &copy_points[quads[quad][1]];
+                ang1 = atan2( to->y / to->z - from->y / from->z,
+                              to->x / to->z - from->x / from->z );
+                to = &copy_points[quads[quad][3]];
+                ang2 = atan2( to->y / to->z - from->y / from->z,
+                              to->x / to->z - from->x / from->z );
 
-            draw_quad = 0;
-            if (current_level > 0)
-            {
-                if ( (ang2 - ang1 > 0.0f && ang2 - ang1 < M_PI) ||
-                     (ang2 - ang1 > -2.0f * M_PI && ang2 - ang1 < -M_PI) )
-                    draw_quad = 1;
-            }
-            else
-            {
-                if ( (ang2 - ang1 > M_PI && ang2 - ang1 < 2.0f * M_PI) ||
-                     (ang2 - ang1 > -1.0f * M_PI && ang2 - ang1 < 0) )
-                    draw_quad = 1;
-            }
-            if (draw_quad)
-            {
-                SDL_BlitSurface( quad_sfcs[quad][current_level], NULL,
-                                 quid_sfcs[current_level], NULL );
-                if (!show_full_map && current_level > 0)
-                    SDL_BlitSurface( hide_sfcs[quad][current_level], NULL,
+                draw_quad = 0;
+                if (current_level > 0)
+                {
+                    if ( (ang2 - ang1 > 0.0f && ang2 - ang1 < M_PI) ||
+                         (ang2 - ang1 > -2.0f * M_PI && ang2 - ang1 < -M_PI) )
+                        draw_quad = 1;
+                }
+                else
+                {
+                    if ( (ang2 - ang1 > M_PI && ang2 - ang1 < 2.0f * M_PI) ||
+                         (ang2 - ang1 > -1.0f * M_PI && ang2 - ang1 < 0) )
+                        draw_quad = 1;
+                }
+                if (draw_quad)
+                {
+                    SDL_BlitSurface( quad_sfcs[quad][current_level], NULL,
                                      quid_sfcs[current_level], NULL );
-                DrawOutlinedQuadWithDecals( Screen, quid_sfcs[current_level],
-                                            quad, grey );
+                    if (!show_full_map && current_level > 0)
+                        SDL_BlitSurface( hide_sfcs[quad][current_level], NULL,
+                                         quid_sfcs[current_level], NULL );
+                    DrawOutlinedQuadWithDecals( maze_sfc,
+                                                quid_sfcs[current_level],
+                                                quad, grey );
+                }
             }
+            redraw_maze = 0;
         }
+        SDL_BlitSurface(maze_sfc, NULL, Screen, NULL);
 
         if (PlayerOnExit(&exit_up_rooms[player.level]))
-            SDL_BlitSurface(ascend_txt, NULL, Screen, &ascend_rect);
+            SDL_BlitSurface(ascend_txt_sfc, NULL, Screen, &ascend_rect);
         if (player.level > 0 && PlayerOnExit(&exit_dn_rooms[player.level]))
-            SDL_BlitSurface(descend_txt, NULL, Screen, &descend_rect);
+            SDL_BlitSurface(descend_txt_sfc, NULL, Screen, &descend_rect);
         if ( player.level == total_num_levels - 1 &&
              PlayerOnExit(&exit_final_room) )
-        {
-            SDL_BlitSurface(exit_txt, NULL, Screen, &exit_rect);
-        }
+            SDL_BlitSurface(exit_txt_sfc, NULL, Screen, &exit_rect);
 
         ticks = MAX(1, SDL_GetTicks());
-        RotatePalette( exit_up_sfc, exit_up_pal, exit_up_pal_cpy,
-                       SPRITE_SIZE, INWARD, ticks );
-        RotatePalette( exit_dn_sfc, exit_dn_pal, exit_dn_pal_cpy,
-                       SPRITE_SIZE, INWARD, ticks );
-        RotatePalette( exit_final_sfc, exit_final_pal, exit_final_pal_cpy,
-                       SPRITE_SIZE, INWARD, ticks );
+        if (!fast_graphics)
+        {
+            RotatePalette( exit_up_sfc, exit_up_pal, exit_up_pal_cpy,
+                           SPRITE_SIZE, ticks );
+            RotatePalette( exit_dn_sfc, exit_dn_pal, exit_dn_pal_cpy,
+                           SPRITE_SIZE, ticks );
+            RotatePalette( exit_final_sfc, exit_final_pal, exit_final_pal_cpy,
+                           SPRITE_SIZE, ticks );
+        }
 
         if (fade_start > 0)
         {
@@ -865,20 +936,138 @@ int GameLoop()
             else
                 fade_start = 0;
         }
+        if (show_ctrl_buttons)
+        {
+            for (x = 0; x <= 1; ++x)
+            {
+                for (i = 0; i < NUM_BUTTONS; ++i)
+                {
+                    sfc = button_sfcs[i];
+                    rect = &button_rects[i];
+                    blit_flag = 0;
+                    if (player.level > 0)
+                    {
+                        if ( x == 1 && mouse_b1_pressed && can_click_ctrl &&
+                             m_hit_x > rect->x &&
+                             m_hit_x < rect->x + rect->w - 1 &&
+                             m_hit_y > rect->y &&
+                             m_hit_y < rect->y + rect->h - 1 &&
+                             m_x > rect->x && m_x < rect->x + rect->w - 1 &&
+                             m_y > rect->y && m_y < rect->y + rect->h - 1 )
+                        {
+                            blit_flag = 1;
+                            SDL_SetColors(sfc, &white_c, 1, 1);
+                            if (i == BUTTON_ZOOM_OUT)
+                            {
+                                ZoomOut();
+                            }
+                            else if (i == BUTTON_ZOOM_IN)
+                            {
+                                ZoomIn();
+                            }
+                            else if ( i != BUTTON_ZOOM_IN &&
+                                      i != BUTTON_ZOOM_OUT )
+                            {
+                                if ( rotating == ROTATE_NONE &&
+                                     ticks - rotation_start > MAZE_ROTATE_TIME )
+                                {
+                                    follow_player = 0;
+                                    if (player.traversing == TRAVERSE_FOLLOW)
+                                        player.traversing = TRAVERSE_CENTER;
+                                    switch (i)
+                                    {
+                                        case BUTTON_UP:
+                                            rotating = ROTATE_UP;
+                                            break;
+
+                                        case BUTTON_DOWN:
+                                            rotating = ROTATE_DOWN;
+                                            break;
+
+                                        case BUTTON_LEFT:
+                                            rotating = ROTATE_LEFT;
+                                            break;
+
+                                        case BUTTON_RIGHT:
+                                            rotating = ROTATE_RIGHT;
+                                            break;
+
+                                        case BUTTON_CWISE:
+                                            rotating = ROTATE_CWISE;
+                                            break;
+
+                                        case BUTTON_CCWISE:
+                                            rotating = ROTATE_CCWISE;
+                                            break;
+
+                                        default:
+                                            fprintf( stderr,
+                                                     "Unrecognized control "
+                                                     "button\n" );
+                                            break;
+
+                                    }
+                                    rotation_start = MAX(1, SDL_GetTicks());
+                                }
+                            }
+                        }
+                        else if (x == 0)
+                        {
+                            blit_flag = 1;
+                            if ( m_x > rect->x &&
+                                 m_x < rect->x + rect->w - 1 &&
+                                 m_y > rect->y &&
+                                 m_y < rect->y + rect->h - 1 )
+                            {
+                                SDL_SetColors(sfc, &mouse_c, 0, 1);
+                                SDL_SetColors(sfc, &grey_c, 1, 1);
+                            }
+                            else
+                            {
+                                SDL_SetColors(sfc, &black_c, 0, 1);
+                                SDL_SetColors(sfc, &grey_c, 1, 1);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        SDL_SetColors(sfc, &dk_grey_c, 0, 1);
+                        SDL_SetColors(sfc, &grey_c, 1, 1);
+                        blit_flag = 1;
+                    }
+                    if (blit_flag)
+                        SDL_BlitSurface(sfc, NULL, Screen, rect);
+                }
+            }
+        }
+
         SDL_UpdateRect(Screen, 0, 0, 0, 0);
 
-        if (maze_size > -1)
+        if (player.level > 0)
             for (quad = 0; quad < NUM_QUADS; ++quad)
                 for (i = 0; i < maze_size * maze_size; ++i)
                 {
-                    ticks = MAX( 1, SDL_GetTicks() -
-                                 unhide_starts[quad][current_level][i] );
-                    if (unhide_starts[quad][current_level][i] > 0)
+                    if (unhide_starts[quad][player.level][i] > 0)
                     {
-                        if (fast_graphics || ticks >= UNHIDE_TIME)
+                        ticks = MAX( 1, SDL_GetTicks() -
+                                     unhide_starts[quad][player.level][i] );
+                        if (fast_graphics)
                         {
-                            unhide_starts[quad][current_level][i] = 0xffffffff;
-                            SetPixel_32( hide_sfcs[quad][current_level],
+                            unhide_starts[quad][player.level][i] = 0xffffffff;
+                            if (GetPixel_32( hide_sfcs[quad][player.level],
+                                             i % maze_size,
+                                             i / maze_size ) == HIDE_COLOR )
+                            {
+                                SetPixel_32( hide_sfcs[quad][player.level],
+                                             i % maze_size,
+                                             i / maze_size, UNHIDE_COLOR );
+                                redraw_maze = 1;
+                            }
+                        }
+                        else if (ticks >= UNHIDE_TIME)
+                        {
+                            unhide_starts[quad][player.level][i] = 0xffffffff;
+                            SetPixel_32( hide_sfcs[quad][player.level],
                                          i % maze_size,
                                          i / maze_size, UNHIDE_COLOR );
                         }
@@ -886,28 +1075,34 @@ int GameLoop()
                         {
                             a = 255 - 255 * ticks / UNHIDE_TIME;
                             c = SDL_MapRGBA(
-                                    hide_sfcs[quad][current_level]->format,
+                                    hide_sfcs[quad][player.level]->format,
                                     hide_r, hide_g, hide_b, a );
-                            SetPixel_32( hide_sfcs[quad][current_level],
+                            SetPixel_32( hide_sfcs[quad][player.level],
                                          i % maze_size,
                                          i / maze_size, c );
                         }
                     }
                 }
 
+        if (move_by_mouse)
+            i = PLAYER_MOUSE_MOVE_TIME;
+        else
+            i = PLAYER_KEY_MOVE_TIME;
+
         if ( player.move_ticks_start > 0 &&
-             SDL_GetTicks() - player.move_ticks_start >= PLAYER_MOVE_TIME )
+             SDL_GetTicks() - player.move_ticks_start > i )
         {
+            player.move_ticks_start = 0;
             player.room.x = player.to_room.x;
             player.room.y = player.to_room.y;
             player.room.quad = player.to_room.quad;
-            player.move_ticks_start = 0;
             player.x_dir = 0;
             player.y_dir = 0;
             player.move_x = 0;
             player.move_y = 0;
             player.move_x_opp = 0;
             player.move_y_opp = 0;
+            redraw_maze = 1;
         }
 
         ticks = SDL_GetTicks();
@@ -916,16 +1111,7 @@ int GameLoop()
         {
             if (k_shift)
             {
-                if (!follow_player)
-                {
-                    full_zoom += FULL_ZOOM_SPEED;
-                    if (full_zoom > MAX_FULL_ZOOM)
-                        full_zoom = MAX_FULL_ZOOM;
-                }
-                else
-                {
-                    player_zoom += player_zoom_speed;
-                }
+                ZoomIn();
             }
             else if (k_ctrl)
             {
@@ -935,7 +1121,7 @@ int GameLoop()
                     if (player.traversing == TRAVERSE_FOLLOW)
                         player.traversing = TRAVERSE_CENTER;
                     rotating = ROTATE_UP;
-                    rotation_start = SDL_GetTicks();
+                    rotation_start = MAX(1, SDL_GetTicks());
                 }
             }
             else
@@ -943,7 +1129,7 @@ int GameLoop()
                 if (player.room.quad == current_quad)
                 {
                     if (player.move_ticks_start == 0)
-                        MovePlayer(UP);
+                        MovePlayerByKey(UP);
                 }
                 else
                     RestorePoints();
@@ -954,18 +1140,7 @@ int GameLoop()
         {
             if (k_shift)
             {
-                if (!follow_player)
-                {
-                    full_zoom -= FULL_ZOOM_SPEED;
-                    if (full_zoom < MIN_FULL_ZOOM)
-                        full_zoom = MIN_FULL_ZOOM;
-                }
-                else
-                {
-                    player_zoom -= player_zoom_speed;
-                    if (player_zoom < MIN_FULL_ZOOM)
-                        player_zoom = MIN_FULL_ZOOM;
-                }
+                ZoomOut();
             }
             else if (k_ctrl)
             {
@@ -975,7 +1150,7 @@ int GameLoop()
                     if (player.traversing == TRAVERSE_FOLLOW)
                         player.traversing = TRAVERSE_CENTER;
                     rotating = ROTATE_DOWN;
-                    rotation_start = SDL_GetTicks();
+                    rotation_start = MAX(1, SDL_GetTicks());
                 }
             }
             else
@@ -983,7 +1158,7 @@ int GameLoop()
                 if (player.room.quad == current_quad)
                 {
                     if (player.move_ticks_start == 0)
-                        MovePlayer(DOWN);
+                        MovePlayerByKey(DOWN);
                 }
                 else
                 {
@@ -1002,7 +1177,7 @@ int GameLoop()
                     if (player.traversing == TRAVERSE_FOLLOW)
                         player.traversing = TRAVERSE_CENTER;
                     rotating = ROTATE_CCWISE;
-                    rotation_start = SDL_GetTicks();
+                    rotation_start = MAX(1, SDL_GetTicks());
                 }
             }
             else if (k_ctrl)
@@ -1013,7 +1188,7 @@ int GameLoop()
                     if (player.traversing == TRAVERSE_FOLLOW)
                         player.traversing = TRAVERSE_CENTER;
                     rotating = ROTATE_LEFT;
-                    rotation_start = SDL_GetTicks();
+                    rotation_start = MAX(1, SDL_GetTicks());
                 }
             }
             else
@@ -1021,7 +1196,7 @@ int GameLoop()
                 if (player.room.quad == current_quad)
                 {
                     if (player.move_ticks_start == 0)
-                        MovePlayer(LEFT);
+                        MovePlayerByKey(LEFT);
                 }
                 else
                 {
@@ -1040,7 +1215,7 @@ int GameLoop()
                     if (player.traversing == TRAVERSE_FOLLOW)
                         player.traversing = TRAVERSE_CENTER;
                     rotating = ROTATE_CWISE;
-                    rotation_start = SDL_GetTicks();
+                    rotation_start = MAX(1, SDL_GetTicks());
                 }
             }
             else if (k_ctrl)
@@ -1051,7 +1226,7 @@ int GameLoop()
                     if (player.traversing == TRAVERSE_FOLLOW)
                         player.traversing = TRAVERSE_CENTER;
                     rotating = ROTATE_RIGHT;
-                    rotation_start = SDL_GetTicks();
+                    rotation_start = MAX(1, SDL_GetTicks());
                 }
             }
             else
@@ -1059,7 +1234,7 @@ int GameLoop()
                 if (player.room.quad == current_quad)
                 {
                     if (player.move_ticks_start == 0)
-                        MovePlayer(RIGHT);
+                        MovePlayerByKey(RIGHT);
                 }
                 else
                 {
@@ -1079,8 +1254,8 @@ int GameLoop()
             SDL_Delay(1);
         }
         n_frames++;
-        total_ticks += SDL_GetTicks() - tick_count;
         tick_count = SDL_GetTicks();
+        total_ticks += tick_count - tick_count;
 
         while (SDL_PollEvent(&evt))
         {
@@ -1095,7 +1270,7 @@ int GameLoop()
                     {
                         case SDLK_q:
                             NextState = ConfirmMessage;
-                            PreviousState = GameLoop;
+                            PreviousState = GamePlay;
                             AffirmState = NULL;
                             state_arg = quit_prompt;
                             finished = 1;
@@ -1145,6 +1320,7 @@ int GameLoop()
                                 maze_size = player.level * 4 - 1;
                                 RestorePoints();
                             }
+                            redraw_maze = 1;
                             break;
 
                         case SDLK_EQUALS:
@@ -1152,6 +1328,7 @@ int GameLoop()
                                 full_zoom = FULL_ZOOM_START;
                             else if (player.level > 0)
                                 player_zoom = SPRITE_SIZE * 4 * maze_size;
+                            redraw_maze = 1;
                             break;
 
                         case SDLK_a:
@@ -1205,6 +1382,7 @@ int GameLoop()
                                     }
                                 }
                             }
+                            redraw_maze = 1;
                             break;
 
                         case SDLK_d:
@@ -1246,6 +1424,7 @@ int GameLoop()
                                     }
                                 }
                             }
+                            redraw_maze = 1;
                             break;
 
                         case SDLK_RETURN:
@@ -1337,13 +1516,15 @@ int GameLoop()
                                     }
                                 }
                             }
+                            redraw_maze = 1;
                             break;
 
-                        case SDLK_m:
 #ifdef DEBUG_SHOW_MAP
+                        case SDLK_m:
                             show_full_map = 1 - show_full_map;
-#endif
+                            redraw_maze = 1;
                             break;
+#endif
 
                     }
                     break;
@@ -1379,21 +1560,33 @@ int GameLoop()
                                 --k_ctrl;
                             break;
 
-                        case SDLK_SPACE:
-                            /*k_spc = 0;*/
-                            break;
-
                     }
+                    break;
+
+                case SDL_MOUSEBUTTONDOWN:
+                    if (evt.button.button == 1)
+                    {
+                        mouse_b1_pressed = 1;
+                        m_hit_x = m_x;
+                        m_hit_y = m_y;
+                        can_click_ctrl = 1;
+                    }
+                    else if (evt.button.button == 3)
+                    {
+                        move_by_mouse = 0;
+                        show_ctrl_buttons = 1 - show_ctrl_buttons;
+                        can_click_ctrl = 0;
+                    }
+                    break;
+
+                case SDL_MOUSEBUTTONUP:
+                    if (evt.button.button == 1)
+                        mouse_b1_pressed = 0;
                     break;
 
             }
         }
     }
-
-    TTF_CloseFont(fnt);
-    SDL_FreeSurface(descend_txt);
-    SDL_FreeSurface(ascend_txt);
-    SDL_FreeSurface(exit_txt);
 
     if (NextState)
         return 0;
@@ -1417,17 +1610,17 @@ int WinScreen()
 
     win_fnt = TTF_OpenFont(FONT_NAME, 24);
     win_a_txt = TTF_RenderText_Shaded( win_fnt, "You have escaped the cube",
-                                       def_text_fg, def_text_bg );
+                                       white_c, black_c );
     win_b_txt = TTF_RenderText_Shaded( win_fnt, "Good job!",
-                                       def_text_fg, def_text_bg );
+                                       white_c, black_c );
 
     while (!finished)
     {
         SDL_FillRect(Screen, NULL, black);
-        dst_rect.x = SCREEN_W / 2 - win_a_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(win_a_txt->w);
         dst_rect.y = SCREEN_H / 2 - win_a_txt->h;
         SDL_BlitSurface(win_a_txt, NULL, Screen, &dst_rect);
-        dst_rect.x = SCREEN_W / 2 - win_b_txt->w / 2;
+        dst_rect.x = CENTER_X_SCREEN(win_b_txt->w);
         dst_rect.y += win_b_txt->h;
         SDL_BlitSurface(win_b_txt, NULL, Screen, &dst_rect);
 
@@ -1515,10 +1708,10 @@ int ConfirmMessage()
     char *msg = (char *)state_arg;
     
     fnt = TTF_OpenFont(FONT_NAME, 20);
-    prompt_txt = TTF_RenderText_Shaded(fnt, msg, def_text_fg, def_text_bg);
-    yes_txt = TTF_RenderText_Shaded(fnt, "Yes", def_text_fg, def_text_bg);
-    no_txt = TTF_RenderText_Shaded(fnt, "No", def_text_fg, def_text_bg);
-    back_sfc = NewSurface( SDL_SWSURFACE, Screen->format,
+    prompt_txt = TTF_RenderText_Shaded(fnt, msg, white_c, black_c);
+    yes_txt = TTF_RenderText_Shaded(fnt, "Yes", white_c, black_c);
+    no_txt = TTF_RenderText_Shaded(fnt, "No", white_c, black_c);
+    back_sfc = NewSurface( SCREEN_FLAGS, Screen->format,
                            prompt_txt->w + 4, prompt_txt->h * 2 + 4 );
     SDL_FillRect(back_sfc, NULL, black);
     DrawLine_32(back_sfc, 0, 0, back_sfc->w - 1, 0, white);
@@ -1538,7 +1731,7 @@ int ConfirmMessage()
         old_m_x = m_x;
         old_m_y = m_y;
 
-        dst_rect.x = SCREEN_W / 2 - prompt_txt->w / 2 - 2;
+        dst_rect.x = CENTER_X_SCREEN(prompt_txt->w) - 2;
         dst_rect.y = SCREEN_H / 2 - prompt_txt->h - 2;
         SDL_BlitSurface(back_sfc, NULL, Screen, &dst_rect);
         dst_rect.x += 2;  dst_rect.y += 2;
@@ -1558,10 +1751,10 @@ int ConfirmMessage()
         }
         else
         {
-            SDL_SetColors(yes_txt, &no_hi_bg, 0, 1);
+            SDL_SetColors(yes_txt, &black_c, 0, 1);
         }
         if (current_sel == 0)
-            SDL_SetColors(yes_txt, &hi_bg, 0, 1);
+            SDL_SetColors(yes_txt, &mouse_c, 0, 1);
         SDL_BlitSurface(yes_txt, NULL, Screen, &dst_rect);
         dst_rect.x += yes_txt->w / 2 + prompt_txt->w / 3 - no_txt->w / 2;
         if ( m_x >= dst_rect.x && m_x < dst_rect.x + no_txt->w &&
@@ -1569,7 +1762,7 @@ int ConfirmMessage()
         {
             if (mouse_select)
                 current_sel = 1;
-                SDL_SetColors(no_txt, &hi_bg, 0, 1);
+                SDL_SetColors(no_txt, &mouse_c, 0, 1);
             if (m_b)
             {
                 NextState = PreviousState;
@@ -1578,10 +1771,10 @@ int ConfirmMessage()
         }
         else
         {
-            SDL_SetColors(no_txt, &no_hi_bg, 0, 1);
+            SDL_SetColors(no_txt, &black_c, 0, 1);
         }
         if (current_sel == 1)
-            SDL_SetColors(no_txt, &hi_bg, 0, 1);
+            SDL_SetColors(no_txt, &mouse_c, 0, 1);
         SDL_BlitSurface(no_txt, NULL, Screen, &dst_rect);
         SDL_UpdateRect(Screen, 0, 0, 0, 0);
         SDL_Delay(1);

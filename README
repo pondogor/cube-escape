@@ -9,6 +9,7 @@ Description:
 Requirements:
     SDL             http://www.libsdl.org/download-1.2.php
     SDL_ttf         http://www.libsdl.org/projects/SDL_ttf/
+    SDL_image       http://www.libsdl.org/projects/SDL_image/
 
 Build instructions:
     Type  make  at a suitable terminal in the main directory to build
@@ -38,7 +39,10 @@ Controls:
         over a blue exit makes the player descend. The Enter key handles
         both ascending and descending appropriately. Pressing 'f' sets
         the camera mode for following the player on/off. Press '=' to
-        restore previous zoom level. Press 'q' to quit.
+        restore previous zoom level. Press 'q' to quit. Press the right
+        mouse button to switch on or off the on-screen mouse controls.
+        When displayed, hold the left mouse button after rolling over a
+        control to rotate or zoom the maze appropriately.
 
 Updates:
     v0.7: Fixed Windows bug that hinders the player from moving at the

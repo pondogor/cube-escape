@@ -2,7 +2,7 @@
 
 CC     = gcc
 CFLAGS = $(shell sdl-config --cflags)
-LIBS   = $(shell sdl-config --libs) -lm -lSDL_ttf
+LIBS   = $(shell sdl-config --libs) -lm -lSDL_ttf -lSDL_image
 
 TARGET  = cube-escape
 
