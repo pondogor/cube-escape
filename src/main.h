@@ -41,6 +41,7 @@
 
 #define DATA_DIR  "data/"
 #define FONT_NAME  DATA_DIR "LiberationMono-Regular.ttf"
+#define ICON_NAME  DATA_DIR "icon.png"
 
 #define SPRITE_SIZE  64
 #define NUM_BUTTONS  8
@@ -85,6 +86,7 @@
 /* Globals section */
 
 SDL_Surface *Screen,
+            *icon_sfc,
             *maze_sfc,
             *fade_sfc,
             *prev_sfc,
@@ -157,12 +159,12 @@ int maze_size,
     total_num_levels,
     start_level,
     prev_num_levels,
-    current_level,
     rotating,
     show_full_map,
     follow_player,
     playing,
     fast_graphics,
+    fast_move,
     redraw_maze,
     move_by_mouse,
     show_ctrl_buttons;

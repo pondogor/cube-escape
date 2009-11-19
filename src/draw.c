@@ -86,7 +86,7 @@ void DrawLine_32( SDL_Surface *sfc, int x1, int y1, int x2, int y2, Uint32 c )
 
 
 void DrawFilledGradientCircle( SDL_Surface *sfc, int diam,
-                               int center_x, int center_y,
+                               int up_left_x, int up_left_y,
                                Uint32 center_color, Uint32 edge_color )
 {
     int half = diam / 2,
@@ -121,7 +121,7 @@ void DrawFilledGradientCircle( SDL_Surface *sfc, int diam,
                                  ca + (float)(ea - ca) * d / half );
             if (d < half)
             {
-                SetPixel_32( sfc, x + center_x - half, y + center_y - half,
+                SetPixel_32( sfc, x + up_left_x, y + up_left_y,
                              color );
             }
         }
@@ -384,7 +384,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
     {
         x_offset = 0;
         y_offset = 0;
-        if (current_level == 0)
+        if (player.level == 0)
             zoom = full_zoom / 3;
         else
             zoom = full_zoom;
@@ -600,7 +600,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
             color = SDL_MapRGB(dst->format, r, g, b);
             SetPixel_32(dst, x1, y1, color);
 
-            if (exit_dn_rooms[current_level].quad == n_quad)
+            if (exit_dn_rooms[player.level].quad == n_quad)
             {
                 if (qe1->scr_x == qe2->scr_x)
                     x2 = sprite_w - 1;
@@ -610,8 +610,8 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                                   (qe2->tex.x - qe1->tex.x) +
                                   qe1->tex.x ) * sprite_w );
                 y2 = sprite_hold[x1][y1];
-                if ( x2 / SPRITE_SIZE == exit_dn_rooms[current_level].x &&
-                     y2 / SPRITE_SIZE == exit_dn_rooms[current_level].y )
+                if ( x2 / SPRITE_SIZE == exit_dn_rooms[player.level].x &&
+                     y2 / SPRITE_SIZE == exit_dn_rooms[player.level].y )
                 {
                     x3 = x2 % SPRITE_SIZE;
                     y3 = y2 % SPRITE_SIZE;
@@ -641,7 +641,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                 }
             }
 
-            if (exit_up_rooms[current_level].quad == n_quad)
+            if (exit_up_rooms[player.level].quad == n_quad)
             {
                 if (qe1->scr_x == qe2->scr_x)
                     x2 = sprite_w - 1;
@@ -651,8 +651,8 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                                   (qe2->tex.x - qe1->tex.x) +
                                   qe1->tex.x ) * sprite_w );
                 y2 = sprite_hold[x1][y1];
-                if ( x2 / SPRITE_SIZE == exit_up_rooms[current_level].x &&
-                     y2 / SPRITE_SIZE == exit_up_rooms[current_level].y )
+                if ( x2 / SPRITE_SIZE == exit_up_rooms[player.level].x &&
+                     y2 / SPRITE_SIZE == exit_up_rooms[player.level].y )
                 {
                     x3 = x2 % SPRITE_SIZE;
                     y3 = y2 % SPRITE_SIZE;
@@ -682,7 +682,7 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                 }
             }
 
-            if ( current_level == total_num_levels - 1 &&
+            if ( player.level == total_num_levels - 1 &&
                  exit_final_room.quad == n_quad )
             {
                 if (qe1->scr_x == qe2->scr_x)
@@ -724,74 +724,71 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                 }
             }
 
-            if (current_level == player.level)
+            if (n_quad == player.room.quad)
             {
-                if (n_quad == player.room.quad)
+                if (qe1->scr_x == qe2->scr_x)
+                    x2 = sprite_w - 1;
+                else
+                    x2 = (int)( ( (float)(x1 - qe1->scr_x) /
+                                  (qe2->scr_x - qe1->scr_x) *
+                                  (qe2->tex.x - qe1->tex.x) +
+                                  qe1->tex.x ) * sprite_w );
+                y2 = sprite_hold[x1][y1];
+                if ( x2 / SPRITE_SIZE == player.room.x &&
+                     y2 / SPRITE_SIZE == player.room.y )
                 {
-                    if (qe1->scr_x == qe2->scr_x)
-                        x2 = sprite_w - 1;
-                    else
-                        x2 = (int)( ( (float)(x1 - qe1->scr_x) /
-                                      (qe2->scr_x - qe1->scr_x) *
-                                      (qe2->tex.x - qe1->tex.x) +
-                                      qe1->tex.x ) * sprite_w );
-                    y2 = sprite_hold[x1][y1];
-                    if ( x2 / SPRITE_SIZE == player.room.x &&
-                         y2 / SPRITE_SIZE == player.room.y )
+                    x3 = x2 % SPRITE_SIZE - player.move_x;
+                    y3 = y2 % SPRITE_SIZE - player.move_y;
+                    if ( x3 >= 0 && x3 < SPRITE_SIZE &&
+                         y3 >= 0 && y3 < SPRITE_SIZE )
                     {
-                        x3 = x2 % SPRITE_SIZE - player.move_x;
-                        y3 = y2 % SPRITE_SIZE - player.move_y;
-                        if ( x3 >= 0 && x3 < SPRITE_SIZE &&
-                             y3 >= 0 && y3 < SPRITE_SIZE )
+                        color = GetPixel_32( player_sfc,
+                                             x3 % SPRITE_SIZE,
+                                             y3 % SPRITE_SIZE );
+                        if (color != pl_mask_color)
                         {
-                            color = GetPixel_32( player_sfc,
-                                                 x3 % SPRITE_SIZE,
-                                                 y3 % SPRITE_SIZE );
-                            if (color != pl_mask_color)
-                            {
-                                SDL_GetRGB( color, player_sfc->format,
-                                            &pl_r, &pl_g, &pl_b );
-                                pl_r *= factor; pl_g *= factor; pl_b *= factor;
-                                color = SDL_MapRGB( dst->format,
-                                                    pl_r, pl_g, pl_b );
-                                SetPixel_32(dst, x1, y1, color);
-                            }
+                            SDL_GetRGB( color, player_sfc->format,
+                                        &pl_r, &pl_g, &pl_b );
+                            pl_r *= factor; pl_g *= factor; pl_b *= factor;
+                            color = SDL_MapRGB( dst->format,
+                                                pl_r, pl_g, pl_b );
+                            SetPixel_32(dst, x1, y1, color);
                         }
                     }
                 }
-                if ( !fast_graphics && player.move_ticks_start > 0 &&
-                     n_quad == player.to_room.quad )
+            }
+            if ( !fast_graphics && player.move_ticks_start > 0 &&
+                 n_quad == player.to_room.quad )
+            {
+                if (qe1->scr_x == qe2->scr_x)
+                    x2 = sprite_w - 1;
+                else
+                    x2 = (int)( ( (float)(x1 - qe1->scr_x) /
+                                  (qe2->scr_x - qe1->scr_x) *
+                                  (qe2->tex.x - qe1->tex.x) +
+                                  qe1->tex.x ) * sprite_w );
+                y2 = sprite_hold[x1][y1];
+                if ( x2 / SPRITE_SIZE == player.to_room.x &&
+                     y2 / SPRITE_SIZE == player.to_room.y )
                 {
-                    if (qe1->scr_x == qe2->scr_x)
-                        x2 = sprite_w - 1;
-                    else
-                        x2 = (int)( ( (float)(x1 - qe1->scr_x) /
-                                      (qe2->scr_x - qe1->scr_x) *
-                                      (qe2->tex.x - qe1->tex.x) +
-                                      qe1->tex.x ) * sprite_w );
-                    y2 = sprite_hold[x1][y1];
-                    if ( x2 / SPRITE_SIZE == player.to_room.x &&
-                         y2 / SPRITE_SIZE == player.to_room.y )
+                    x3 = x2 % SPRITE_SIZE - player.move_x_opp;
+                    y3 = y2 % SPRITE_SIZE - player.move_y_opp;
+                    if ( x3 >= 0 && x3 < SPRITE_SIZE &&
+                         y3 >= 0 && y3 < SPRITE_SIZE )
                     {
-                        x3 = x2 % SPRITE_SIZE - player.move_x_opp;
-                        y3 = y2 % SPRITE_SIZE - player.move_y_opp;
-                        if ( x3 >= 0 && x3 < SPRITE_SIZE &&
-                             y3 >= 0 && y3 < SPRITE_SIZE )
+                        color = GetPixel_32( player_sfc,
+                                             x3 % SPRITE_SIZE,
+                                             y3 % SPRITE_SIZE );
+                        if (color != pl_mask_color)
                         {
-                            color = GetPixel_32( player_sfc,
-                                                 x3 % SPRITE_SIZE,
-                                                 y3 % SPRITE_SIZE );
-                            if (color != pl_mask_color)
-                            {
-                                SDL_GetRGB( color, player_sfc->format,
-                                            &pl_r, &pl_g, &pl_b );
-                                pl_r *= factor;
-                                pl_g *= factor;
-                                pl_b *= factor;
-                                color = SDL_MapRGB( dst->format,
-                                                    pl_r, pl_g, pl_b );
-                                SetPixel_32(dst, x1, y1, color);
-                            }
+                            SDL_GetRGB( color, player_sfc->format,
+                                        &pl_r, &pl_g, &pl_b );
+                            pl_r *= factor;
+                            pl_g *= factor;
+                            pl_b *= factor;
+                            color = SDL_MapRGB( dst->format,
+                                                pl_r, pl_g, pl_b );
+                            SetPixel_32(dst, x1, y1, color);
                         }
                     }
                 }

@@ -53,6 +53,9 @@ void InitGame( time_t seed )
         fprintf(stderr, "Error initializing SDL: %s\n", SDL_GetError());
         Quit(1);
     }
+    SDL_WM_SetCaption(TITLE, TITLE);
+    icon_sfc = IMG_Load(ICON_NAME);
+    SDL_WM_SetIcon(icon_sfc, NULL);
     Screen = SDL_SetVideoMode(SCREEN_W, SCREEN_H, 32, SCREEN_FLAGS);
     if (Screen == NULL)
     {
@@ -61,7 +64,6 @@ void InitGame( time_t seed )
         Quit(1);
     }
     fmt = Screen->format;
-    SDL_WM_SetCaption(TITLE, TITLE);
 
     if (TTF_Init())
     {
@@ -99,8 +101,7 @@ void InitGame( time_t seed )
 #endif
 
     player_sfc = NewSurface(SCREEN_FLAGS, fmt, SPRITE_SIZE, SPRITE_SIZE);
-    DrawFilledGradientCircle( player_sfc, SPRITE_SIZE, SPRITE_SIZE / 2,
-                              SPRITE_SIZE / 2, green, dk_green );
+    DrawFilledGradientCircle(player_sfc, SPRITE_SIZE, 0, 0, green, dk_green);
 
     exit_up_sfc = SDL_CreateRGBSurface( SCREEN_FLAGS,
                                         SPRITE_SIZE, SPRITE_SIZE, 8,
@@ -438,8 +439,10 @@ void InitMazeStructure( int old_num_levels, int num_levels )
     quads[4][0] = 2;  quads[4][1] = 1;  quads[4][2] = 5;  quads[4][3] = 6;
     quads[5][0] = 7;  quads[5][1] = 4;  quads[5][2] = 0;  quads[5][3] = 3;
 
-    player.level = current_level = start_level - 1;
+    player.level = start_level - 1;
     maze_size = player.level * 4 - 1;
+
+    fast_move = FAST_READY;
 
     if (maze_size == -1)
     {
@@ -592,6 +595,7 @@ void RestorePoints()
         points[i].z = copy_points[i].z = restore_points[i].z;
     }
     current_quad = player.room.quad;
+    redraw_maze = 1;
 }
 
 
@@ -757,7 +761,8 @@ int RotateCube( int traversing )
     }
     else
     {
-        if ( (float)(SDL_GetTicks() - player.move_ticks_start) /
+        if ( fast_graphics ||
+             (float)(SDL_GetTicks() - player.move_ticks_start) /
              PLAYER_KEY_MOVE_TIME > 0.5f )
         {
             angle = hf_pi;
@@ -1210,6 +1215,7 @@ void Quit( int code )
     for (i = 0; i < NUM_BUTTONS; ++i)
         SDL_FreeSurface(button_sfcs[i]);
     SDL_FreeSurface(maze_sfc);
+    SDL_FreeSurface(icon_sfc);
     if (exit_up_rooms)
         free(exit_up_rooms);
     if (exit_dn_rooms)

@@ -62,6 +62,14 @@ enum
     BUTTON_ZOOM_OUT
 } ButtonActions;
 
+enum
+{
+    FAST_READY,
+    FAST_PLAYER_MOVE,
+    FAST_ROTATE_MAZE,
+    FAST_FINISH_ROTATE
+} FastMovement;
+
 typedef struct
 {
     float x;

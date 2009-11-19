@@ -876,7 +876,7 @@ int GamePlay()
                               to->x / to->z - from->x / from->z );
 
                 draw_quad = 0;
-                if (current_level > 0)
+                if (player.level > 0)
                 {
                     if ( (ang2 - ang1 > 0.0f && ang2 - ang1 < M_PI) ||
                          (ang2 - ang1 > -2.0f * M_PI && ang2 - ang1 < -M_PI) )
@@ -890,13 +890,13 @@ int GamePlay()
                 }
                 if (draw_quad)
                 {
-                    SDL_BlitSurface( quad_sfcs[quad][current_level], NULL,
-                                     quid_sfcs[current_level], NULL );
-                    if (!show_full_map && current_level > 0)
-                        SDL_BlitSurface( hide_sfcs[quad][current_level], NULL,
-                                         quid_sfcs[current_level], NULL );
+                    SDL_BlitSurface( quad_sfcs[quad][player.level], NULL,
+                                     quid_sfcs[player.level], NULL );
+                    if (!show_full_map && player.level > 0)
+                        SDL_BlitSurface( hide_sfcs[quad][player.level], NULL,
+                                         quid_sfcs[player.level], NULL );
                     DrawOutlinedQuadWithDecals( maze_sfc,
-                                                quid_sfcs[current_level],
+                                                quid_sfcs[player.level],
                                                 quad, grey );
                 }
             }
@@ -974,6 +974,7 @@ int GamePlay()
                                     follow_player = 0;
                                     if (player.traversing == TRAVERSE_FOLLOW)
                                         player.traversing = TRAVERSE_CENTER;
+                                    fast_move = FAST_ROTATE_MAZE;
                                     switch (i)
                                     {
                                         case BUTTON_UP:
@@ -1089,8 +1090,49 @@ int GamePlay()
         else
             i = PLAYER_KEY_MOVE_TIME;
 
-        if ( player.move_ticks_start > 0 &&
-             SDL_GetTicks() - player.move_ticks_start > i )
+        if (fast_graphics && player.move_ticks_start > 0)
+        {
+            if (fast_move == FAST_PLAYER_MOVE)
+            {
+                if (rotating != ROTATE_NONE)
+                {
+                    player.room.x = player.to_room.x;
+                    player.room.y = player.to_room.y;
+                    player.room.quad = player.to_room.quad;
+                    if (RotateCube(TRAVERSE_FOLLOW))
+                    {
+                        rotating = ROTATE_NONE;
+                        fast_move = FAST_READY;
+                    }
+                    player.x_dir = 0;
+                    player.y_dir = 0;
+                    player.move_x = 0;
+                    player.move_y = 0;
+                    player.move_x_opp = 0;
+                    player.move_y_opp = 0;
+                }
+                else if (player.room.quad == player.to_room.quad)
+                { 
+                    fast_move = FAST_READY;
+                    player.room.x = player.to_room.x;
+                    player.room.y = player.to_room.y;
+                    player.x_dir = 0;
+                    player.y_dir = 0;
+                    player.move_x = 0;
+                    player.move_y = 0;
+                    player.move_x_opp = 0;
+                    player.move_y_opp = 0;
+                }
+                redraw_maze = 1;
+            }
+            if (SDL_GetTicks() - player.move_ticks_start > i)
+            {
+                player.move_ticks_start = 0;
+                fast_move = FAST_READY;
+            }
+        }
+        else if ( !fast_graphics && player.move_ticks_start > 0 &&
+                  SDL_GetTicks() - player.move_ticks_start > i )
         {
             player.move_ticks_start = 0;
             player.room.x = player.to_room.x;
@@ -1107,7 +1149,7 @@ int GamePlay()
 
         ticks = SDL_GetTicks();
 
-        if (k_up && rotating == ROTATE_NONE && current_level > 0)
+        if (k_up && rotating == ROTATE_NONE && player.level > 0)
         {
             if (k_shift)
             {
@@ -1115,6 +1157,7 @@ int GamePlay()
             }
             else if (k_ctrl)
             {
+                fast_move = FAST_ROTATE_MAZE;
                 if (ticks - rotation_start > MAZE_ROTATE_TIME)
                 {
                     follow_player = 0;
@@ -1129,14 +1172,17 @@ int GamePlay()
                 if (player.room.quad == current_quad)
                 {
                     if (player.move_ticks_start == 0)
+                    {
+                        fast_move = FAST_PLAYER_MOVE;
                         MovePlayerByKey(UP);
+                    }
                 }
                 else
                     RestorePoints();
             }
         }
 
-        if (k_down && rotating == ROTATE_NONE && current_level > 0)
+        if (k_down && rotating == ROTATE_NONE && player.level > 0)
         {
             if (k_shift)
             {
@@ -1144,6 +1190,7 @@ int GamePlay()
             }
             else if (k_ctrl)
             {
+                fast_move = FAST_ROTATE_MAZE;
                 if (ticks - rotation_start > MAZE_ROTATE_TIME)
                 {
                     follow_player = 0;
@@ -1158,7 +1205,10 @@ int GamePlay()
                 if (player.room.quad == current_quad)
                 {
                     if (player.move_ticks_start == 0)
+                    {
+                        fast_move = FAST_PLAYER_MOVE;
                         MovePlayerByKey(DOWN);
+                    }
                 }
                 else
                 {
@@ -1167,10 +1217,11 @@ int GamePlay()
             }
         }
 
-        if (k_left && rotating == ROTATE_NONE && current_level > 0)
+        if (k_left && rotating == ROTATE_NONE && player.level > 0)
         {
             if (k_shift)
             {
+                fast_move = FAST_ROTATE_MAZE;
                 if (ticks - rotation_start > MAZE_ROTATE_TIME)
                 {
                     follow_player = 0;
@@ -1182,6 +1233,7 @@ int GamePlay()
             }
             else if (k_ctrl)
             {
+                fast_move = FAST_ROTATE_MAZE;
                 if (ticks - rotation_start > MAZE_ROTATE_TIME)
                 {
                     follow_player = 0;
@@ -1196,7 +1248,10 @@ int GamePlay()
                 if (player.room.quad == current_quad)
                 {
                     if (player.move_ticks_start == 0)
+                    {
+                        fast_move = FAST_PLAYER_MOVE;
                         MovePlayerByKey(LEFT);
+                    }
                 }
                 else
                 {
@@ -1205,10 +1260,11 @@ int GamePlay()
             }
         }
 
-        if (k_right && rotating == ROTATE_NONE && current_level > 0)
+        if (k_right && rotating == ROTATE_NONE && player.level > 0)
         {
             if (k_shift)
             {
+                fast_move = FAST_ROTATE_MAZE;
                 if (ticks - rotation_start > MAZE_ROTATE_TIME)
                 {
                     follow_player = 0;
@@ -1220,6 +1276,7 @@ int GamePlay()
             }
             else if (k_ctrl)
             {
+                fast_move = FAST_ROTATE_MAZE;
                 if (ticks - rotation_start > MAZE_ROTATE_TIME)
                 {
                     follow_player = 0;
@@ -1234,7 +1291,10 @@ int GamePlay()
                 if (player.room.quad == current_quad)
                 {
                     if (player.move_ticks_start == 0)
+                    {
+                        fast_move = FAST_PLAYER_MOVE;
                         MovePlayerByKey(RIGHT);
+                    }
                 }
                 else
                 {
@@ -1243,11 +1303,24 @@ int GamePlay()
             }
         }
 
-        if ( rotating && (fast_graphics && RotateCube(TRAVERSE_FOLLOW)) ||
-             (!fast_graphics && RotateCube(player.traversing)) )
+        if (fast_graphics)
         {
-            rotating = ROTATE_NONE;
+            if (rotating != ROTATE_NONE && fast_move == FAST_ROTATE_MAZE)
+            {
+                if (RotateCube(TRAVERSE_FOLLOW))
+                    fast_move = FAST_FINISH_ROTATE;
+            }
+            else if ( fast_move == FAST_FINISH_ROTATE &&
+                      SDL_GetTicks() - rotation_start > MAZE_ROTATE_TIME )
+            {
+                fast_move = FAST_READY;
+                rotation_start = 0;
+                rotating = ROTATE_NONE;
+            }
+
         }
+        else if (rotating != ROTATE_NONE && RotateCube(player.traversing))
+            rotating = ROTATE_NONE;
 
         while (SDL_GetTicks() - tick_count < hold_ticks)
         {
@@ -1316,7 +1389,7 @@ int GamePlay()
                                 follow_player = 1 - follow_player;
                             if (follow_player)
                             {
-                                current_level = player.level;
+                                player.level = player.level;
                                 maze_size = player.level * 4 - 1;
                                 RestorePoints();
                             }
@@ -1335,9 +1408,9 @@ int GamePlay()
                             RestorePoints();
                             if (player.level == 0)
                             {
-                                current_level++;
-                                maze_size = current_level * 4 - 1;
-                                player.level = current_level;
+                                player.level++;
+                                maze_size = player.level * 4 - 1;
+                                player.level = player.level;
                                 player.room.x = 1;
                                 player.room.y = 1;
                                 player.room.quad = 0;
@@ -1365,11 +1438,11 @@ int GamePlay()
                             else if (
                                 PlayerOnExit(&exit_up_rooms[player.level]) )
                             {
-                                if (current_level < total_num_levels - 1)
+                                if (player.level < total_num_levels - 1)
                                 {
-                                    current_level++;
-                                    maze_size = current_level * 4 - 1;
-                                    player.level = current_level;
+                                    player.level++;
+                                    maze_size = player.level * 4 - 1;
+                                    player.level = player.level;
                                     player.room.x += 2;
                                     player.room.y += 2;
                                     ResetObjects();
@@ -1389,11 +1462,11 @@ int GamePlay()
                             RestorePoints();
                             if (PlayerOnExit(&exit_dn_rooms[player.level]))
                             {
-                                if (current_level > 1)
+                                if (player.level > 1)
                                 {
-                                    current_level--;
-                                    maze_size = current_level * 4 - 1;
-                                    player.level = current_level;
+                                    player.level--;
+                                    maze_size = player.level * 4 - 1;
+                                    player.level = player.level;
                                     player.room.x -= 2;
                                     player.room.y -= 2;
                                     ResetObjects();
@@ -1407,9 +1480,9 @@ int GamePlay()
                                 }
                                 else
                                 {
-                                    current_level = 0;
-                                    maze_size = current_level * 4 - 1;
-                                    player.level = current_level;
+                                    player.level = 0;
+                                    maze_size = player.level * 4 - 1;
+                                    player.level = player.level;
                                     player.room.x = 0;
                                     player.room.y = 0;
                                     player.room.quad = 1;
@@ -1431,9 +1504,9 @@ int GamePlay()
                             RestorePoints();
                             if (player.level == 0)
                             {
-                                current_level++;
-                                maze_size = current_level * 4 - 1;
-                                player.level = current_level;
+                                player.level++;
+                                maze_size = player.level * 4 - 1;
+                                player.level = player.level;
                                 player.room.x = 1;
                                 player.room.y = 1;
                                 player.room.quad = 0;
@@ -1461,11 +1534,11 @@ int GamePlay()
                             else if (
                                 PlayerOnExit(&exit_up_rooms[player.level]) )
                             {
-                                if (current_level < total_num_levels - 1)
+                                if (player.level < total_num_levels - 1)
                                 {
-                                    current_level++;
-                                    maze_size = current_level * 4 - 1;
-                                    player.level = current_level;
+                                    player.level++;
+                                    maze_size = player.level * 4 - 1;
+                                    player.level = player.level;
                                     player.room.x += 2;
                                     player.room.y += 2;
                                     ResetObjects();
@@ -1481,11 +1554,11 @@ int GamePlay()
                             else if (
                                 PlayerOnExit(&exit_dn_rooms[player.level]) )
                             {
-                                if (current_level > 1)
+                                if (player.level > 1)
                                 {
-                                    current_level--;
-                                    maze_size = current_level * 4 - 1;
-                                    player.level = current_level;
+                                    player.level--;
+                                    maze_size = player.level * 4 - 1;
+                                    player.level = player.level;
                                     player.room.x -= 2;
                                     player.room.y -= 2;
                                     ResetObjects();
@@ -1499,9 +1572,9 @@ int GamePlay()
                                 }
                                 else
                                 {
-                                    current_level = 0;
-                                    maze_size = current_level * 4 - 1;
-                                    player.level = current_level;
+                                    player.level = 0;
+                                    maze_size = player.level * 4 - 1;
+                                    player.level = player.level;
                                     player.room.x = 0;
                                     player.room.y = 0;
                                     player.room.quad = 1;
