@@ -46,7 +46,7 @@
 #define SPRITE_SIZE  64
 #define NUM_BUTTONS  8
 #define PLAYER_KEY_MOVE_TIME  200
-#define PLAYER_MOUSE_MOVE_TIME  60
+#define PLAYER_MOUSE_MOVE_TIME  80
 
 #define MAX_PSG_LENGTH  12
 #define NUM_POINTS  8
@@ -166,7 +166,7 @@ int maze_size,
     fast_graphics,
     fast_move,
     redraw_maze,
-    move_by_mouse,
+    pl_move_time,
     show_ctrl_buttons;
 
 Sint16 quads[6][4];
@@ -221,7 +221,7 @@ void RotatePalette( SDL_Surface *sfc, SDL_Color *palette, SDL_Color *copy,
                     int size, Uint32 ticks );
 void SetUnhideTicks( int quad, int x, int y, Uint32 ticks );
 void SearchMaze( SfcMazeRoom_t *from );
-void MovePlayerByMouse( void );
+void MovePlayerByMouse( int up_to_x, int up_to_y, int on_click );
 void MovePlayerByKey( int dir );
 int PlayerOnExit( SfcMazeRoom_t *exit );
 void Quit( int code );

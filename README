@@ -1,4 +1,4 @@
-Cube Escape v0.7, written by Sean McKean, Gamechild Software
+Cube Escape v0.8, written by Sean McKean, Gamechild Software
 
 Description:
     You are inside a cube made up of numerous shells, with a maze etched
@@ -31,20 +31,27 @@ Controls:
           of alpha-fade effects and gradual rotations.
 
     In game:
-        Move player around maze with arrow keys. Holding shift down and
-        pressing the arrow keys rotates maze clockwise, counter-
-        clockwise, or adjusts zoom; holding control and pressing the
-        arrow keys rotates to a different face of the cube. Pressing 'a'
-        key over a green exit makes the player ascend one level; 'd'
-        over a blue exit makes the player descend. The Enter key handles
-        both ascending and descending appropriately. Pressing 'f' sets
-        the camera mode for following the player on/off. Press '=' to
-        restore previous zoom level. Press 'q' to quit. Press the right
-        mouse button to switch on or off the on-screen mouse controls.
-        When displayed, hold the left mouse button after rolling over a
-        control to rotate or zoom the maze appropriately.
+        Move player around maze with arrow keys, or with the left mouse
+        button. To ascend or descend an exit or to send the player over
+        a maze edge, click on the player icon when it is on the exit or
+        edge. Holding shift down and pressing the arrow keys rotates
+        maze clockwise, counter-clockwise, or adjusts zoom; holding
+        control and pressing the arrow keys rotates to a different face
+        of the cube. Pressing 'a' key over a green exit makes the player
+        ascend one level; 'd' over a blue exit makes the player descend.
+        The Enter key handles both ascending and descending
+        appropriately. Pressing 'f' sets the camera mode for following
+        the player on/off. Press '=' to restore previous zoom level.
+        Press 'q' to quit. Tap the right mouse button to switch the
+        on-screen mouse controls on or off. When displayed, hold the
+        left mouse button after rolling over a control to rotate or zoom
+        the maze appropriately.
 
 Updates:
+    v0.8: Added improved mouse support; maze can now be traversed with
+          just the mouse, keyboard, or both.
+          Added option to allow simplified graphics for older computers.
+
     v0.7: Fixed Windows bug that hinders the player from moving at the
           beginning.
           Added option to set the beginning level.
@@ -57,8 +64,6 @@ Updates:
     v0.5: Initial release.
 
 TODO:
-    - Add mouse support to control maze rotation, zoom, and player
-      movement.
     - Add sound support.
     - Allow more than one exit per level.
 

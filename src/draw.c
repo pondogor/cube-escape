@@ -248,6 +248,83 @@ void SetQuadEdgeArrays( QuadEdge_t *set_x, int start_x,
 }
 
 
+void ComputeFollowOffsets( float zoom, float z, int m_size,
+                           int *x_offset, int *y_offset )
+{
+    float x_distance = 0.0f,
+          y_distance = 0.0f;
+    int x1 = 0,
+        y1 = 0,
+        x2 = 0,
+        y2 = 0;
+
+    x_distance = y_distance = (2.0f * zoom) / z / m_size;
+
+    if (fast_graphics)
+    {
+        if ( player.traversing == TRAVERSE_FOLLOW &&
+             rotating == ROTATE_NONE )
+        {
+            x1 = player.to_room.x;
+            y1 = player.to_room.y;
+        }
+        else
+        {
+            x1 = player.room.x;
+            y1 = player.room.y;
+        }
+        x2 = 0;
+        y2 = 0;
+    }
+    else if ( player.traversing == TRAVERSE_FOLLOW &&
+              rotating == ROTATE_NONE )
+    {
+        x1 = player.to_room.x;
+        y1 = player.to_room.y;
+        x2 = player.move_x_opp;
+        y2 = player.move_y_opp;
+    }
+    else
+    {
+        x1 = player.room.x;
+        y1 = player.room.y;
+        x2 = player.move_x;
+        y2 = player.move_y;
+    }
+    switch (player.orient)
+    {
+        case UP:
+            *x_offset = +x_distance * ( (float)m_size / 2.0f - x1 -
+                                        (float)x2 / SPRITE_SIZE - 0.5f );
+            *y_offset = +y_distance * ( (float)m_size / 2.0f - y1 -
+                                        (float)y2 / SPRITE_SIZE - 0.5f );
+            break;
+
+        case DOWN:
+            *x_offset = -x_distance * ( (float)m_size / 2.0f - x1 -
+                                        (float)x2 / SPRITE_SIZE - 0.5f );
+            *y_offset = -y_distance * ( (float)m_size / 2.0f - y1 -
+                                        (float)y2 / SPRITE_SIZE - 0.5f );
+            break;
+
+        case LEFT:
+            *x_offset = -y_distance * ( (float)m_size / 2.0f - y1 -
+                                        (float)y2 / SPRITE_SIZE - 0.5f );
+            *y_offset = +x_distance * ( (float)m_size / 2.0f - x1 -
+                                        (float)x2 / SPRITE_SIZE - 0.5f );
+            break;
+
+        case RIGHT:
+            *x_offset = +y_distance * ( (float)m_size / 2.0f - y1 -
+                                        (float)y2 / SPRITE_SIZE - 0.5f );
+            *y_offset = -x_distance * ( (float)m_size / 2.0f - x1 -
+                                        (float)x2 / SPRITE_SIZE - 0.5f );
+            break;
+
+    }
+}
+
+
 void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                                  int n_quad, Uint32 line_color )
 {
@@ -257,13 +334,11 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                *qe2 = NULL;
     Point_t *pt1 = NULL,
             *pt2 = NULL;
-    int m_size = maze_size > -1 ? maze_size : 1;
-    int texture_hold[dst->w][dst->h],
+    int m_size = (maze_size > -1 ? maze_size : 1),
+        texture_hold[dst->w][dst->h],
         sprite_hold[dst->w][dst->h],
         sprite_w = SPRITE_SIZE * m_size,
         sprite_h = SPRITE_SIZE * m_size,
-        x_distance = 0,
-        y_distance = 0,
         x_offset = 0,
         y_offset = 0,
         edge_x = 0,
@@ -315,70 +390,8 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
          (n_quad == player.room.quad || n_quad == player.to_room.quad) )
     {
         zoom = player_zoom;
-        x_distance = (2.0f * zoom) / (center.z - 1.0f) / m_size;
-        y_distance = (2.0f * zoom) / (center.z - 1.0f) / m_size;
-        if (fast_graphics)
-        {
-            if ( player.traversing == TRAVERSE_FOLLOW &&
-                 rotating == ROTATE_NONE )
-            {
-                x1 = player.to_room.x;
-                y1 = player.to_room.y;
-            }
-            else
-            {
-                x1 = player.room.x;
-                y1 = player.room.y;
-            }
-            x2 = 0;
-            y2 = 0;
-        }
-        else if ( player.traversing == TRAVERSE_FOLLOW &&
-                  rotating == ROTATE_NONE )
-        {
-            x1 = player.to_room.x;
-            y1 = player.to_room.y;
-            x2 = player.move_x_opp;
-            y2 = player.move_y_opp;
-        }
-        else
-        {
-            x1 = player.room.x;
-            y1 = player.room.y;
-            x2 = player.move_x;
-            y2 = player.move_y;
-        }
-        switch (player.orient)
-        {
-            case UP:
-                x_offset = +x_distance * ( (float)m_size / 2.0f - x1 -
-                                           (float)x2 / SPRITE_SIZE - 0.5f );
-                y_offset = +y_distance * ( (float)m_size / 2.0f - y1 -
-                                           (float)y2 / SPRITE_SIZE - 0.5f );
-                break;
-
-            case DOWN:
-                x_offset = -x_distance * ( (float)m_size / 2.0f - x1 -
-                                           (float)x2 / SPRITE_SIZE - 0.5f );
-                y_offset = -y_distance * ( (float)m_size / 2.0f - y1 -
-                                           (float)y2 / SPRITE_SIZE - 0.5f );
-                break;
-
-            case LEFT:
-                x_offset = -y_distance * ( (float)m_size / 2.0f - y1 -
-                                           (float)y2 / SPRITE_SIZE - 0.5f );
-                y_offset = +x_distance * ( (float)m_size / 2.0f - x1 -
-                                           (float)x2 / SPRITE_SIZE - 0.5f );
-                break;
-
-            case RIGHT:
-                x_offset = +y_distance * ( (float)m_size / 2.0f - y1 -
-                                           (float)y2 / SPRITE_SIZE - 0.5f );
-                y_offset = -x_distance * ( (float)m_size / 2.0f - x1 -
-                                           (float)x2 / SPRITE_SIZE - 0.5f );
-                break;
-
-        }
+        ComputeFollowOffsets( zoom, center.z - 1.0f, m_size,
+                              &x_offset, &y_offset );
     }
     else
     {
@@ -478,15 +491,14 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
     /* Adjust player sprite if moving. */
     if (!fast_graphics && player.x_dir != 0)
     {
-        player.move_x =
-            SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME;
+        player.move_x = SPRITE_SIZE * ticks / pl_move_time;
         if (player.move_x > SPRITE_SIZE)
             player.move_x = SPRITE_SIZE;
         player.move_x *= player.x_dir;
         if (player.traversing == NOT_TRAVERSING)
         {
             player.move_x_opp =
-                SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE;
+                SPRITE_SIZE * ticks / pl_move_time - SPRITE_SIZE;
             if (player.move_x_opp > 0)
                 player.move_x_opp = 0;
             player.move_x_opp *= player.x_dir;
@@ -494,14 +506,14 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
         else if (player.to_room.y == 0)
         {
             player.move_y_opp =
-                +(SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE);
+                +(SPRITE_SIZE * ticks / pl_move_time - SPRITE_SIZE);
             if (player.move_y_opp > 0)
                 player.move_y_opp = 0;
         }
         else
         {
             player.move_y_opp =
-                -(SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE);
+                -(SPRITE_SIZE * ticks / pl_move_time - SPRITE_SIZE);
             if (player.move_y_opp < 0)
                 player.move_y_opp = 0;
         }
@@ -509,14 +521,14 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
     else if (!fast_graphics && player.y_dir != 0)
     {
         player.move_y =
-            SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME;
+            SPRITE_SIZE * ticks / pl_move_time;
         if (player.move_y > SPRITE_SIZE)
             player.move_y = SPRITE_SIZE;
         player.move_y *= player.y_dir;
         if (player.traversing == NOT_TRAVERSING)
         {
             player.move_y_opp =
-                SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE;
+                SPRITE_SIZE * ticks / pl_move_time - SPRITE_SIZE;
             if (player.move_y_opp > 0)
                 player.move_y_opp = 0;
             player.move_y_opp *= player.y_dir;
@@ -524,14 +536,14 @@ void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
         else if (player.to_room.x == 0)
         {
             player.move_x_opp =
-                +(SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE);
+                +(SPRITE_SIZE * ticks / pl_move_time - SPRITE_SIZE);
             if (player.move_x_opp > 0)
                 player.move_x_opp = 0;
         }
         else
         {
             player.move_x_opp =
-                -(SPRITE_SIZE * ticks / PLAYER_KEY_MOVE_TIME - SPRITE_SIZE);
+                -(SPRITE_SIZE * ticks / pl_move_time - SPRITE_SIZE);
             if (player.move_x_opp < 0)
                 player.move_x_opp = 0;
         }
