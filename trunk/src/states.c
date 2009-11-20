@@ -829,20 +829,33 @@ int GamePlay()
     SDL_Event evt;
     const int hold_ticks = 1000 / TARGET_FPS;
     int player_move_ticks = 0,
+        m_b1_pressed_alt = 0,
         mouse_b1_pressed = 0,
         can_click_ctrl = 0,
         draw_quad = 0,
         blit_flag = 0,
         finished = 0,
+        x_offset = 0,
+        y_offset = 0,
         m_hit_x = 0,
         m_hit_y = 0,
+        to_x = 0,
+        to_y = 0,
         quad = 0,
         m_x = 0,
         m_y = 0,
-        i = 0,
-        x = 0;
+        x0 = 0,
+        y0 = 0,
+        x1 = 0,
+        y1 = 0,
+        x2 = 0,
+        y2 = 0,
+        x3 = 0,
+        y3 = 0,
+        i = 0;
     float ang1 = 0.0f,
-          ang2 = 0.0f;
+          ang2 = 0.0f,
+          zoom = 0.0f;
     Point_t *from = NULL,
             *to = NULL;
     Uint32 ticks = 0,
@@ -938,7 +951,7 @@ int GamePlay()
         }
         if (show_ctrl_buttons)
         {
-            for (x = 0; x <= 1; ++x)
+            for (x1 = 0; x1 <= 1; ++x1)
             {
                 for (i = 0; i < NUM_BUTTONS; ++i)
                 {
@@ -947,7 +960,7 @@ int GamePlay()
                     blit_flag = 0;
                     if (player.level > 0)
                     {
-                        if ( x == 1 && mouse_b1_pressed && can_click_ctrl &&
+                        if ( x1 == 1 && mouse_b1_pressed && can_click_ctrl &&
                              m_hit_x > rect->x &&
                              m_hit_x < rect->x + rect->w - 1 &&
                              m_hit_y > rect->y &&
@@ -1012,7 +1025,7 @@ int GamePlay()
                                 }
                             }
                         }
-                        else if (x == 0)
+                        else if (x1 == 0)
                         {
                             blit_flag = 1;
                             if ( m_x > rect->x &&
@@ -1043,6 +1056,180 @@ int GamePlay()
         }
 
         SDL_UpdateRect(Screen, 0, 0, 0, 0);
+
+        if (m_b1_pressed_alt && player.level == 0)
+        {
+            redraw_maze = 1;
+
+            player.level++;
+            maze_size = player.level * 4 - 1;
+            player.room.x = 1;
+            player.room.y = 1;
+            player.room.quad = 0;
+            ResetObjects();
+
+            if (!fast_graphics)
+            {
+                fade_start = MAX(1, SDL_GetTicks());
+                SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+            }
+        }
+        else if ( mouse_b1_pressed && player.room.quad == current_quad &&
+                  player.x_dir == 0 && player.y_dir == 0 &&
+                  player.move_ticks_start == 0 && rotating == ROTATE_NONE )
+        {
+            if (follow_player)
+            {
+                zoom = player_zoom;
+                ComputeFollowOffsets( zoom, center.z - 1.0f, maze_size,
+                                      &x_offset, &y_offset );
+            }
+            else
+            {
+                zoom = full_zoom;
+                x_offset = y_offset = 0;
+            }
+
+            to = &points[quads[current_quad][0]];
+            x0 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
+            y0 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
+            to = &points[quads[current_quad][1]];
+            x1 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
+            y1 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
+            to = &points[quads[current_quad][2]];
+            x2 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
+            y2 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
+            to = &points[quads[current_quad][3]];
+            x3 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
+            y3 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
+
+            to_x = -1;
+            to_y = -1;
+            switch (player.orient)
+            {
+                case UP:
+                    if (m_x >= x0 && m_x < x2 && m_y >= y0 && m_y < y2)
+                    {
+                        to_x = (m_x - x0) * maze_size / (x2 - x0);
+                        to_y = (m_y - y0) * maze_size / (y2 - y0);
+#ifdef DEBUG_DIAGNOSTICS
+                        printf("%d %d\n", to_x, to_y);
+#endif
+                    }
+                    break;
+
+                case RIGHT:
+                    if (m_x >= x1 && m_x < x3 && m_y > y1 && m_y <= y3)
+                    {
+                        to_y = (m_x - x0) * maze_size / (x2 - x0);
+                        to_x = (m_y - y0) * maze_size / (y2 - y0);
+#ifdef DEBUG_DIAGNOSTICS
+                        printf("%d %d\n", to_x, to_y);
+#endif
+                    }
+                    break;
+
+                case DOWN:
+                    if (m_x > x2 && m_x <= x0 && m_y > y2 && m_y <= y0)
+                    {
+                        to_x = (m_x - x0) * maze_size / (x2 - x0);
+                        to_y = (m_y - y0) * maze_size / (y2 - y0);
+#ifdef DEBUG_DIAGNOSTICS
+                        printf("%d %d\n", to_x, to_y);
+#endif
+                    }
+                    break;
+
+                case LEFT:
+                    if (m_x > x3 && m_x <= x1 && m_y >= y3 && m_y < y1)
+                    {
+                        to_y = (m_x - x0) * maze_size / (x2 - x0);
+                        to_x = (m_y - y0) * maze_size / (y2 - y0);
+#ifdef DEBUG_DIAGNOSTICS
+                        printf("%d %d\n", to_x, to_y);
+#endif
+                    }
+                    break;
+
+            }
+
+            if (to_x > -1 && to_y > -1)
+                if (to_x == player.room.x && to_y == player.room.y)
+                {
+                    if (m_b1_pressed_alt && PlayerOnExit(&exit_final_room))
+                    {
+                        redraw_maze = 1;
+                        NextState = WinScreen;
+                        if (!fast_graphics)
+                        {
+                            fade_start = MAX(1, SDL_GetTicks());
+                            SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+                        }
+                        mouse_b1_pressed = 0;
+                        finished = 1;
+                    }
+                    else if ( m_b1_pressed_alt &&
+                              PlayerOnExit(&exit_up_rooms[player.level]) )
+                    {
+                        redraw_maze = 1;
+                        if (player.level < total_num_levels - 1)
+                        {
+                            player.level++;
+                            maze_size = player.level * 4 - 1;
+                            player.room.x += 2;
+                            player.room.y += 2;
+                            ResetObjects();
+
+                            if (!fast_graphics)
+                            {
+                                fade_start = MAX(1, SDL_GetTicks());
+                                SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+                            }
+                        }
+                        mouse_b1_pressed = 0;
+                    }
+                    else if ( m_b1_pressed_alt &&
+                              PlayerOnExit(&exit_dn_rooms[player.level]) )
+                    {
+                        redraw_maze = 1;
+                        if (player.level > 1)
+                        {
+                            player.level--;
+                            maze_size = player.level * 4 - 1;
+                            player.room.x -= 2;
+                            player.room.y -= 2;
+                            ResetObjects();
+
+                            if (!fast_graphics)
+                            {
+                                fade_start = MAX(1, SDL_GetTicks());
+                                SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+                            }
+                        }
+                        else
+                        {
+                            player.level = 0;
+                            maze_size = player.level * 4 - 1;
+                            player.room.x = 0;
+                            player.room.y = 0;
+                            player.room.quad = 1;
+                            follow_player = 0;
+                            ResetObjects();
+
+                            if (!fast_graphics)
+                            {
+                                fade_start = MAX(1, SDL_GetTicks());
+                                SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
+                            }
+                        }
+                        mouse_b1_pressed = 0;
+                    }
+                    else
+                        MovePlayerByMouse(to_x, to_y, m_b1_pressed_alt);
+                }
+                else
+                    MovePlayerByMouse(to_x, to_y, m_b1_pressed_alt);
+        }
 
         if (player.level > 0)
             for (quad = 0; quad < NUM_QUADS; ++quad)
@@ -1085,11 +1272,6 @@ int GamePlay()
                     }
                 }
 
-        if (move_by_mouse)
-            i = PLAYER_MOUSE_MOVE_TIME;
-        else
-            i = PLAYER_KEY_MOVE_TIME;
-
         if (fast_graphics && player.move_ticks_start > 0)
         {
             if (fast_move == FAST_PLAYER_MOVE)
@@ -1125,14 +1307,14 @@ int GamePlay()
                 }
                 redraw_maze = 1;
             }
-            if (SDL_GetTicks() - player.move_ticks_start > i)
+            if (SDL_GetTicks() - player.move_ticks_start > pl_move_time)
             {
                 player.move_ticks_start = 0;
                 fast_move = FAST_READY;
             }
         }
         else if ( !fast_graphics && player.move_ticks_start > 0 &&
-                  SDL_GetTicks() - player.move_ticks_start > i )
+                  SDL_GetTicks() - player.move_ticks_start > pl_move_time )
         {
             player.move_ticks_start = 0;
             player.room.x = player.to_room.x;
@@ -1330,6 +1512,8 @@ int GamePlay()
         tick_count = SDL_GetTicks();
         total_ticks += tick_count - tick_count;
 
+        m_b1_pressed_alt = 0;
+
         while (SDL_PollEvent(&evt))
         {
             switch (evt.type)
@@ -1389,7 +1573,6 @@ int GamePlay()
                                 follow_player = 1 - follow_player;
                             if (follow_player)
                             {
-                                player.level = player.level;
                                 maze_size = player.level * 4 - 1;
                                 RestorePoints();
                             }
@@ -1410,7 +1593,6 @@ int GamePlay()
                             {
                                 player.level++;
                                 maze_size = player.level * 4 - 1;
-                                player.level = player.level;
                                 player.room.x = 1;
                                 player.room.y = 1;
                                 player.room.quad = 0;
@@ -1442,7 +1624,6 @@ int GamePlay()
                                 {
                                     player.level++;
                                     maze_size = player.level * 4 - 1;
-                                    player.level = player.level;
                                     player.room.x += 2;
                                     player.room.y += 2;
                                     ResetObjects();
@@ -1466,7 +1647,6 @@ int GamePlay()
                                 {
                                     player.level--;
                                     maze_size = player.level * 4 - 1;
-                                    player.level = player.level;
                                     player.room.x -= 2;
                                     player.room.y -= 2;
                                     ResetObjects();
@@ -1482,7 +1662,6 @@ int GamePlay()
                                 {
                                     player.level = 0;
                                     maze_size = player.level * 4 - 1;
-                                    player.level = player.level;
                                     player.room.x = 0;
                                     player.room.y = 0;
                                     player.room.quad = 1;
@@ -1506,7 +1685,6 @@ int GamePlay()
                             {
                                 player.level++;
                                 maze_size = player.level * 4 - 1;
-                                player.level = player.level;
                                 player.room.x = 1;
                                 player.room.y = 1;
                                 player.room.quad = 0;
@@ -1538,7 +1716,6 @@ int GamePlay()
                                 {
                                     player.level++;
                                     maze_size = player.level * 4 - 1;
-                                    player.level = player.level;
                                     player.room.x += 2;
                                     player.room.y += 2;
                                     ResetObjects();
@@ -1558,7 +1735,6 @@ int GamePlay()
                                 {
                                     player.level--;
                                     maze_size = player.level * 4 - 1;
-                                    player.level = player.level;
                                     player.room.x -= 2;
                                     player.room.y -= 2;
                                     ResetObjects();
@@ -1574,7 +1750,6 @@ int GamePlay()
                                 {
                                     player.level = 0;
                                     maze_size = player.level * 4 - 1;
-                                    player.level = player.level;
                                     player.room.x = 0;
                                     player.room.y = 0;
                                     player.room.quad = 1;
@@ -1640,13 +1815,13 @@ int GamePlay()
                     if (evt.button.button == 1)
                     {
                         mouse_b1_pressed = 1;
+                        m_b1_pressed_alt = 1;
                         m_hit_x = m_x;
                         m_hit_y = m_y;
                         can_click_ctrl = 1;
                     }
                     else if (evt.button.button == 3)
                     {
-                        move_by_mouse = 0;
                         show_ctrl_buttons = 1 - show_ctrl_buttons;
                         can_click_ctrl = 0;
                     }
@@ -1827,7 +2002,10 @@ int ConfirmMessage()
             SDL_SetColors(yes_txt, &black_c, 0, 1);
         }
         if (current_sel == 0)
+        {
             SDL_SetColors(yes_txt, &mouse_c, 0, 1);
+            SDL_SetColors(no_txt, &black_c, 0, 1);
+        }
         SDL_BlitSurface(yes_txt, NULL, Screen, &dst_rect);
         dst_rect.x += yes_txt->w / 2 + prompt_txt->w / 3 - no_txt->w / 2;
         if ( m_x >= dst_rect.x && m_x < dst_rect.x + no_txt->w &&
@@ -1835,7 +2013,6 @@ int ConfirmMessage()
         {
             if (mouse_select)
                 current_sel = 1;
-                SDL_SetColors(no_txt, &mouse_c, 0, 1);
             if (m_b)
             {
                 NextState = PreviousState;
@@ -1847,7 +2024,10 @@ int ConfirmMessage()
             SDL_SetColors(no_txt, &black_c, 0, 1);
         }
         if (current_sel == 1)
+        {
+            SDL_SetColors(yes_txt, &black_c, 0, 1);
             SDL_SetColors(no_txt, &mouse_c, 0, 1);
+        }
         SDL_BlitSurface(no_txt, NULL, Screen, &dst_rect);
         SDL_UpdateRect(Screen, 0, 0, 0, 0);
         SDL_Delay(1);

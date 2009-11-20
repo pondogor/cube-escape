@@ -38,6 +38,8 @@ void DrawFilledGradientCircle( SDL_Surface *sfc, int diam,
 void SetQuadEdgeArrays( QuadEdge_t *set_x, int start_x,
                         QuadEdge_t *set_y, int start_y,
                         int side, int x1, int y1, int x2, int y2 );
+void ComputeFollowOffsets( float zoom, float z, int m_size,
+                           int *x_offset, int *y_offset );
 void DrawOutlinedQuadWithDecals( SDL_Surface *dst, SDL_Surface *quad_tex,
                                  int n_quad, Uint32 line_color );
 

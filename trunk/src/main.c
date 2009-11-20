@@ -245,7 +245,11 @@ void InitGame( time_t seed )
 
     TTF_CloseFont(fnt);
 
+#ifdef DEBUG_SHOW_MAP
+    show_full_map = 1;
+#else
     show_full_map = 0;
+#endif
 
     k_return = 0;
     k_up = 0;
@@ -275,7 +279,7 @@ void InitGame( time_t seed )
 
     fade_start = 0;
     current_quad = 0;
-    move_by_mouse = 0;
+    pl_move_time = 0;
 
     exit_choice = DEFAULT_EXIT_DISTANCE_CHOICE;
     total_num_levels = DEFAULT_NUM_LEVELS;
@@ -951,9 +955,174 @@ void SearchMaze( SfcMazeRoom_t *from )
 }
 
 
-void MovePlayerByMouse()
+void MovePlayerByMouse( int to_x, int to_y, int on_click )
 {
+    if (player.room.x == to_x && player.room.y == to_y)
+    {
+        if (on_click)
+        {
+            if (to_y == 0)
+            {
+                switch (player.orient)
+                {
+                    case UP:
+                        MovePlayerByKey(UP);
+                        break;
 
+                    case DOWN:
+                        MovePlayerByKey(DOWN);
+                        break;
+
+                    case LEFT:
+                        MovePlayerByKey(RIGHT);
+                        break;
+
+                    case RIGHT:
+                        MovePlayerByKey(LEFT);
+                        break;
+
+                }
+                if (fast_graphics)
+                    fast_move = FAST_PLAYER_MOVE;
+            }
+            else if (to_y == maze_size - 1)
+            {
+                switch (player.orient)
+                {
+                    case UP:
+                        MovePlayerByKey(DOWN);
+                        break;
+
+                    case DOWN:
+                        MovePlayerByKey(UP);
+                        break;
+
+                    case LEFT:
+                        MovePlayerByKey(LEFT);
+                        break;
+
+                    case RIGHT:
+                        MovePlayerByKey(RIGHT);
+                        break;
+
+                }
+                if (fast_graphics)
+                    fast_move = FAST_PLAYER_MOVE;
+            }
+            else if (to_x == 0)
+            {
+                switch (player.orient)
+                {
+                    case UP:
+                        MovePlayerByKey(LEFT);
+                        break;
+
+                    case DOWN:
+                        MovePlayerByKey(RIGHT);
+                        break;
+
+                    case LEFT:
+                        MovePlayerByKey(UP);
+                        break;
+
+                    case RIGHT:
+                        MovePlayerByKey(DOWN);
+                        break;
+
+                }
+                if (fast_graphics)
+                    fast_move = FAST_PLAYER_MOVE;
+            }
+            else if (to_x == maze_size - 1)
+            {
+                switch (player.orient)
+                {
+                    case UP:
+                        MovePlayerByKey(RIGHT);
+                        break;
+
+                    case DOWN:
+                        MovePlayerByKey(LEFT);
+                        break;
+
+                    case LEFT:
+                        MovePlayerByKey(DOWN);
+                        break;
+
+                    case RIGHT:
+                        MovePlayerByKey(UP);
+                        break;
+
+                }
+                if (fast_graphics)
+                    fast_move = FAST_PLAYER_MOVE;
+            }
+        }
+
+        return;
+    }
+
+    player.traversing = NOT_TRAVERSING;
+    if ( to_x < player.room.x &&
+         GetPixel_32( quad_sfcs[player.room.quad][player.level],
+                      player.room.x - 1, player.room.y ) == ROOM_COLOR )
+    {
+        player.x_dir = -1;
+        player.y_dir = 0;
+        player.to_room.x = player.room.x + player.x_dir;
+        player.to_room.y = player.room.y + player.y_dir;
+        player.to_room.quad = player.room.quad;
+        player.move_ticks_start = MAX(1, SDL_GetTicks());
+        pl_move_time = PLAYER_MOUSE_MOVE_TIME;
+        if (fast_graphics)
+            fast_move = FAST_PLAYER_MOVE;
+        SearchMaze(&player.to_room);
+    }
+    else if ( to_y < player.room.y &&
+              GetPixel_32( quad_sfcs[player.room.quad][player.level],
+                           player.room.x, player.room.y - 1 ) == ROOM_COLOR )
+    {
+        player.x_dir = 0;
+        player.y_dir = -1;
+        player.to_room.x = player.room.x + player.x_dir;
+        player.to_room.y = player.room.y + player.y_dir;
+        player.to_room.quad = player.room.quad;
+        player.move_ticks_start = MAX(1, SDL_GetTicks());
+        pl_move_time = PLAYER_MOUSE_MOVE_TIME;
+        if (fast_graphics)
+            fast_move = FAST_PLAYER_MOVE;
+        SearchMaze(&player.to_room);
+    }
+    else if ( to_x > player.room.x &&
+              GetPixel_32( quad_sfcs[player.room.quad][player.level],
+                           player.room.x + 1, player.room.y ) == ROOM_COLOR )
+    {
+        player.x_dir = 1;
+        player.y_dir = 0;
+        player.to_room.x = player.room.x + player.x_dir;
+        player.to_room.y = player.room.y + player.y_dir;
+        player.to_room.quad = player.room.quad;
+        player.move_ticks_start = MAX(1, SDL_GetTicks());
+        pl_move_time = PLAYER_MOUSE_MOVE_TIME;
+        if (fast_graphics)
+            fast_move = FAST_PLAYER_MOVE;
+        SearchMaze(&player.to_room);
+    }
+    else if ( to_y > player.room.y &&
+              GetPixel_32( quad_sfcs[player.room.quad][player.level],
+                           player.room.x, player.room.y + 1 ) == ROOM_COLOR )
+    {
+        player.x_dir = 0;
+        player.y_dir = 1;
+        player.to_room.x = player.room.x + player.x_dir;
+        player.to_room.y = player.room.y + player.y_dir;
+        player.to_room.quad = player.room.quad;
+        player.move_ticks_start = MAX(1, SDL_GetTicks());
+        pl_move_time = PLAYER_MOUSE_MOVE_TIME;
+        if (fast_graphics)
+            fast_move = FAST_PLAYER_MOVE;
+        SearchMaze(&player.to_room);
+    }
 }
 
 
@@ -1030,13 +1199,14 @@ void MovePlayerByKey( int dir )
         player.traversing = NOT_TRAVERSING;
         if ( GetPixel_32( quad_sfcs[player.room.quad][player.level],
                           player.room.x + player.x_dir,
-                          player.room.y + player.y_dir ) != WALL_COLOR )
+                          player.room.y + player.y_dir ) == ROOM_COLOR )
 
         {
             player.move_ticks_start = MAX(1, SDL_GetTicks());
             player.to_room.x = player.room.x + player.x_dir;
             player.to_room.y = player.room.y + player.y_dir;
             player.to_room.quad = player.room.quad;
+            pl_move_time = PLAYER_KEY_MOVE_TIME;
             SearchMaze(&player.to_room);
         }
         else
@@ -1157,6 +1327,7 @@ void MovePlayerByKey( int dir )
     else
         player.traversing = TRAVERSE_CENTER;
     rotation_start = MAX(1, SDL_GetTicks());
+    pl_move_time = PLAYER_KEY_MOVE_TIME;
     SearchMaze(&player.to_room);
 }
 
