@@ -832,6 +832,7 @@ int GamePlay()
         m_b1_pressed_alt = 0,
         mouse_b1_pressed = 0,
         can_click_ctrl = 0,
+        ctrl_b_pressed = 0,
         draw_quad = 0,
         blit_flag = 0,
         finished = 0,
@@ -846,12 +847,8 @@ int GamePlay()
         m_y = 0,
         x0 = 0,
         y0 = 0,
-        x1 = 0,
-        y1 = 0,
         x2 = 0,
         y2 = 0,
-        x3 = 0,
-        y3 = 0,
         i = 0;
     float ang1 = 0.0f,
           ang2 = 0.0f,
@@ -914,6 +911,9 @@ int GamePlay()
                 }
             }
             redraw_maze = 0;
+#ifdef DEBUG_SHOW_FAST_REDRAWS
+            printf("%d\n", SDL_GetTicks());
+#endif
         }
         SDL_BlitSurface(maze_sfc, NULL, Screen, NULL);
 
@@ -949,9 +949,11 @@ int GamePlay()
             else
                 fade_start = 0;
         }
+
+        ctrl_b_pressed = 0;
         if (show_ctrl_buttons)
         {
-            for (x1 = 0; x1 <= 1; ++x1)
+            for (x0 = 0; x0 <= 1; ++x0)
             {
                 for (i = 0; i < NUM_BUTTONS; ++i)
                 {
@@ -960,7 +962,7 @@ int GamePlay()
                     blit_flag = 0;
                     if (player.level > 0)
                     {
-                        if ( x1 == 1 && mouse_b1_pressed && can_click_ctrl &&
+                        if ( x0 == 1 && mouse_b1_pressed && can_click_ctrl &&
                              m_hit_x > rect->x &&
                              m_hit_x < rect->x + rect->w - 1 &&
                              m_hit_y > rect->y &&
@@ -968,6 +970,7 @@ int GamePlay()
                              m_x > rect->x && m_x < rect->x + rect->w - 1 &&
                              m_y > rect->y && m_y < rect->y + rect->h - 1 )
                         {
+                            ctrl_b_pressed = 1;
                             blit_flag = 1;
                             SDL_SetColors(sfc, &white_c, 1, 1);
                             if (i == BUTTON_ZOOM_OUT)
@@ -1025,7 +1028,7 @@ int GamePlay()
                                 }
                             }
                         }
-                        else if (x1 == 0)
+                        else if (x0 == 0)
                         {
                             blit_flag = 1;
                             if ( m_x > rect->x &&
@@ -1074,86 +1077,60 @@ int GamePlay()
                 SDL_BlitSurface(Screen, NULL, prev_sfc, NULL);
             }
         }
-        else if ( mouse_b1_pressed && player.room.quad == current_quad &&
-                  player.x_dir == 0 && player.y_dir == 0 &&
-                  player.move_ticks_start == 0 && rotating == ROTATE_NONE )
+        else if (mouse_b1_pressed && !ctrl_b_pressed)
         {
-            if (follow_player)
+            if (player.room.quad != current_quad)
             {
-                zoom = player_zoom;
-                ComputeFollowOffsets( zoom, center.z - 1.0f, maze_size,
-                                      &x_offset, &y_offset );
-            }
-            else
-            {
-                zoom = full_zoom;
-                x_offset = y_offset = 0;
+                RestorePoints();
+                m_b1_pressed_alt = 0;
             }
 
-            to = &points[quads[current_quad][0]];
-            x0 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
-            y0 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
-            to = &points[quads[current_quad][1]];
-            x1 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
-            y1 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
-            to = &points[quads[current_quad][2]];
-            x2 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
-            y2 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
-            to = &points[quads[current_quad][3]];
-            x3 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
-            y3 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
-
-            to_x = -1;
-            to_y = -1;
-            switch (player.orient)
+            if ( player.x_dir == 0 && player.y_dir == 0 &&
+                 player.move_ticks_start == 0 && rotating == ROTATE_NONE )
             {
-                case UP:
-                    if (m_x >= x0 && m_x < x2 && m_y >= y0 && m_y < y2)
-                    {
-                        to_x = (m_x - x0) * maze_size / (x2 - x0);
-                        to_y = (m_y - y0) * maze_size / (y2 - y0);
+                if (follow_player)
+                {
+                    zoom = player_zoom;
+                    ComputeFollowOffsets( zoom, center.z - 1.0f, maze_size,
+                            &x_offset, &y_offset );
+                }
+                else
+                {
+                    zoom = full_zoom;
+                    x_offset = y_offset = 0;
+                }
+
+                to = &points[quads[current_quad][0]];
+                x0 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
+                y0 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
+                to = &points[quads[current_quad][2]];
+                x2 = TO_SFC_COORD(to, x, zoom) + SCREEN_W / 2 + x_offset;
+                y2 = TO_SFC_COORD(to, y, zoom) + SCREEN_H / 2 + y_offset;
+
+                switch (player.orient)
+                {
+                    case UP:
+                    case DOWN:
+                        to_x = (int)
+                            floor((float)(m_x - x0) * maze_size / (x2 - x0));
+                        to_y = (int)
+                            floor((float)(m_y - y0) * maze_size / (y2 - y0));
+                        break;
+
+                    case RIGHT:
+                    case LEFT:
+                        to_x = (int)
+                            floor((float)(m_y - y0) * maze_size / (y2 - y0));
+                        to_y = (int)
+                            floor((float)(m_x - x0) * maze_size / (x2 - x0));
+                        break;
+
+                }
+
 #ifdef DEBUG_DIAGNOSTICS
-                        printf("%d %d\n", to_x, to_y);
+                printf("%d %d\n", to_x, to_y);
 #endif
-                    }
-                    break;
 
-                case RIGHT:
-                    if (m_x >= x1 && m_x < x3 && m_y > y1 && m_y <= y3)
-                    {
-                        to_y = (m_x - x0) * maze_size / (x2 - x0);
-                        to_x = (m_y - y0) * maze_size / (y2 - y0);
-#ifdef DEBUG_DIAGNOSTICS
-                        printf("%d %d\n", to_x, to_y);
-#endif
-                    }
-                    break;
-
-                case DOWN:
-                    if (m_x > x2 && m_x <= x0 && m_y > y2 && m_y <= y0)
-                    {
-                        to_x = (m_x - x0) * maze_size / (x2 - x0);
-                        to_y = (m_y - y0) * maze_size / (y2 - y0);
-#ifdef DEBUG_DIAGNOSTICS
-                        printf("%d %d\n", to_x, to_y);
-#endif
-                    }
-                    break;
-
-                case LEFT:
-                    if (m_x > x3 && m_x <= x1 && m_y >= y3 && m_y < y1)
-                    {
-                        to_y = (m_x - x0) * maze_size / (x2 - x0);
-                        to_x = (m_y - y0) * maze_size / (y2 - y0);
-#ifdef DEBUG_DIAGNOSTICS
-                        printf("%d %d\n", to_x, to_y);
-#endif
-                    }
-                    break;
-
-            }
-
-            if (to_x > -1 && to_y > -1)
                 if (to_x == player.room.x && to_y == player.room.y)
                 {
                     if (m_b1_pressed_alt && PlayerOnExit(&exit_final_room))
@@ -1229,6 +1206,7 @@ int GamePlay()
                 }
                 else
                     MovePlayerByMouse(to_x, to_y, m_b1_pressed_alt);
+            }
         }
 
         if (player.level > 0)
@@ -1829,7 +1807,10 @@ int GamePlay()
 
                 case SDL_MOUSEBUTTONUP:
                     if (evt.button.button == 1)
+                    {
                         mouse_b1_pressed = 0;
+                        have_followed = 0;
+                    }
                     break;
 
             }
